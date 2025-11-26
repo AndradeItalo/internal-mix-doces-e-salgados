@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Cake } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => void;

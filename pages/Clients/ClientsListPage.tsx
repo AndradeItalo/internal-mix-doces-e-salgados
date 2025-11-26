@@ -21,7 +21,7 @@ export function ClientsListPage() {
         </div>
         <button
           onClick={() => navigate('/clients/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Adicionar Cliente
@@ -37,7 +37,7 @@ export function ClientsListPage() {
             placeholder="Buscar por nome ou telefone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -69,7 +69,7 @@ export function ClientsListPage() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => navigate(`/clients/${cliente.id}`)}
-                      className="flex items-center gap-2 px-3 py-1 text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       Ver Detalhes

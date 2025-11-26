@@ -65,7 +65,7 @@ export function RemindersPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Criar Lembrete
@@ -117,7 +117,7 @@ export function RemindersPage() {
                 return (
                   <div
                     key={lembrete.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-pink-300 transition-colors"
+                    className="p-4 border border-gray-200 rounded-lg hover:border-orange-300 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -188,7 +188,7 @@ export function RemindersPage() {
                     onClick={() => setTipo('entrega')}
                     className={`px-4 py-3 rounded-lg border transition-colors ${
                       tipo === 'entrega'
-                        ? 'border-pink-500 bg-pink-50 text-pink-700'
+                        ? 'border-orange-500 bg-orange-50 text-orange-700'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -200,7 +200,7 @@ export function RemindersPage() {
                     onClick={() => setTipo('pagamento')}
                     className={`px-4 py-3 rounded-lg border transition-colors ${
                       tipo === 'pagamento'
-                        ? 'border-pink-500 bg-pink-50 text-pink-700'
+                        ? 'border-orange-500 bg-orange-50 text-orange-700'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -218,7 +218,7 @@ export function RemindersPage() {
                   id="cliente"
                   value={clienteId}
                   onChange={(e) => setClienteId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required
                 >
                   <option value="">Selecione um cliente</option>
@@ -237,7 +237,7 @@ export function RemindersPage() {
                     id="encomenda"
                     value={encomendaId}
                     onChange={(e) => setEncomendaId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="">Nenhuma encomenda</option>
                     {mockEncomendas
@@ -260,7 +260,7 @@ export function RemindersPage() {
                   type="date"
                   value={dataProgramada}
                   onChange={(e) => setDataProgramada(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -273,7 +273,7 @@ export function RemindersPage() {
                   id="mensagem"
                   value={mensagem}
                   onChange={(e) => setMensagem(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Descrição do lembrete"
                   rows={3}
                   required
@@ -283,7 +283,7 @@ export function RemindersPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                  className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                 >
                   Criar Lembrete
                 </button>

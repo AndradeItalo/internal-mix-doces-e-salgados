@@ -13,7 +13,7 @@ export function ClientDetailsPage() {
     return (
       <div className="p-8">
         <p className="text-gray-600">Cliente não encontrado</p>
-        <button onClick={() => navigate('/clients')} className="text-pink-600 hover:text-pink-700 mt-4">
+        <button onClick={() => navigate('/clients')} className="text-orange-600 hover:text-orange-700 mt-4">
           Voltar
         </button>
       </div>
@@ -110,7 +110,7 @@ export function ClientDetailsPage() {
             {encomendasCliente.map(encomenda => (
               <div
                 key={encomenda.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-pink-300 transition-colors cursor-pointer"
+                className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors cursor-pointer"
                 onClick={() => navigate(`/orders/${encomenda.id}`)}
               >
                 <div className="flex items-center justify-between mb-2">

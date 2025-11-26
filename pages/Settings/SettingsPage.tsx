@@ -3,7 +3,7 @@ import { Save, Upload, Download, Cake } from 'lucide-react';
 
 export function SettingsPage() {
   const [nomeLoja, setNomeLoja] = useState('Mix Doces e Salgados');
-  const [nomeProprietaria, setNomeProprietaria] = useState('Maria Doceira');
+  const [nomeProprietaria, setNomeProprietaria] = useState('Miriam Vicente');
   const [telefone, setTelefone] = useState('(11) 98765-4321');
   const [email, setEmail] = useState('contato@doceriaencanto.com');
   
@@ -55,8 +55,8 @@ export function SettingsPage() {
           <h3 className="text-gray-900 mb-4">Logo e Dados da Loja</h3>
           
           <div className="flex items-center gap-6 mb-6">
-            <div className="w-24 h-24 bg-pink-100 rounded-xl flex items-center justify-center">
-              <Cake className="w-12 h-12 text-pink-600" />
+            <div className="w-48 h-24 flex items-center justify-center">
+              <img src="images/logo-mix-doces.png" alt="Logo Mix Doces" />
             </div>
             <div>
               <button
@@ -80,7 +80,7 @@ export function SettingsPage() {
                 type="text"
                 value={nomeLoja}
                 onChange={(e) => setNomeLoja(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -93,7 +93,7 @@ export function SettingsPage() {
                 type="text"
                 value={nomeProprietaria}
                 onChange={(e) => setNomeProprietaria(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -106,7 +106,7 @@ export function SettingsPage() {
                 type="tel"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
 
@@ -119,7 +119,7 @@ export function SettingsPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -138,7 +138,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={notifEntregas}
                 onChange={(e) => setNotifEntregas(e.target.checked)}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
             </label>
 
@@ -151,7 +151,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={notifPagamentos}
                 onChange={(e) => setNotifPagamentos(e.target.checked)}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
             </label>
 
@@ -164,7 +164,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={notifVendas}
                 onChange={(e) => setNotifVendas(e.target.checked)}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
             </label>
           </div>
@@ -179,7 +179,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={formasPagamento.pix}
                 onChange={(e) => setFormasPagamento({...formasPagamento, pix: e.target.checked})}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
               <span className="text-gray-900">Pix</span>
             </label>
@@ -189,7 +189,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={formasPagamento.dinheiro}
                 onChange={(e) => setFormasPagamento({...formasPagamento, dinheiro: e.target.checked})}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
               <span className="text-gray-900">Dinheiro</span>
             </label>
@@ -199,7 +199,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={formasPagamento.credito}
                 onChange={(e) => setFormasPagamento({...formasPagamento, credito: e.target.checked})}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
               <span className="text-gray-900">Cartão de Crédito</span>
             </label>
@@ -209,7 +209,7 @@ export function SettingsPage() {
                 type="checkbox"
                 checked={formasPagamento.debito}
                 onChange={(e) => setFormasPagamento({...formasPagamento, debito: e.target.checked})}
-                className="w-5 h-5 text-pink-600 rounded focus:ring-2 focus:ring-pink-500"
+                className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
               />
               <span className="text-gray-900">Cartão de Débito</span>
             </label>
@@ -247,7 +247,7 @@ export function SettingsPage() {
         <div className="flex gap-3">
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
           >
             <Save className="w-5 h-5" />
             Salvar Configurações

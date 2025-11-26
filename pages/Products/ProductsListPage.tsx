@@ -25,7 +25,7 @@ export function ProductsListPage() {
         </div>
         <button
           onClick={() => navigate('/products/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Adicionar Produto
@@ -41,14 +41,14 @@ export function ProductsListPage() {
             placeholder="Buscar produto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
 
         <select
           value={categoriaFilter}
           onChange={(e) => setCategoriaFilter(e.target.value)}
-          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
         >
           {categorias.map(categoria => (
             <option key={categoria} value={categoria}>
@@ -76,7 +76,7 @@ export function ProductsListPage() {
                 <tr key={produto.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="px-6 py-4 text-gray-900">{produto.nome}</td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full">
+                    <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full">
                       {produto.categoria}
                     </span>
                   </td>
@@ -85,7 +85,7 @@ export function ProductsListPage() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => navigate(`/products/${produto.id}/edit`)}
-                      className="flex items-center gap-2 px-3 py-1 text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                       Editar

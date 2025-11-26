@@ -37,8 +37,8 @@ export function Sidebar({ onLogout }: SidebarProps) {
     <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-            <Cake className="w-6 h-6 text-pink-600" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img src="images/logo-mix-doces.png" alt="Logo Mix Doces" />
           </div>
           <div>
             <h2 className="text-gray-900">Mix Doces e Salgados</h2>
@@ -58,7 +58,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-pink-50 text-pink-600'
+                  ? 'bg-orange-50 text-orange-600'
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >

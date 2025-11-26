@@ -18,7 +18,7 @@ export function OrderDetailsPage() {
     return (
       <div className="p-8">
         <p className="text-gray-600">Encomenda não encontrada</p>
-        <button onClick={() => navigate('/orders')} className="text-pink-600 hover:text-pink-700 mt-4">
+        <button onClick={() => navigate('/orders')} className="text-orange-600 hover:text-orange-700 mt-4">
           Voltar
         </button>
       </div>
@@ -247,7 +247,7 @@ export function OrderDetailsPage() {
                     max={encomenda.valorPendente}
                     value={valorPagamento}
                     onChange={(e) => setValorPagamento(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder={`Máximo: ${encomenda.valorPendente.toFixed(2)}`}
                   />
                 </div>
@@ -261,7 +261,7 @@ export function OrderDetailsPage() {
                   id="forma"
                   value={formaPagamento}
                   onChange={(e) => setFormaPagamento(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus-border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus-border-transparent"
                 >
                   <option value="Pix">Pix</option>
                   <option value="Dinheiro">Dinheiro</option>
@@ -279,7 +279,7 @@ export function OrderDetailsPage() {
                   type="text"
                   value={observacaoPagamento}
                   onChange={(e) => setObservacaoPagamento(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Ex: Parcela 2 de 3"
                 />
               </div>
@@ -288,7 +288,7 @@ export function OrderDetailsPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleRegistrarPagamento}
-                className="flex-1 px-4 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
               >
                 Confirmar
               </button>

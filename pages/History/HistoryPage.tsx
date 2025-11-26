@@ -94,7 +94,7 @@ export function HistoryPage() {
             id="mes"
             value={filtroMes}
             onChange={(e) => setFiltroMes(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             {meses.map(mes => (
               <option key={mes} value={mes}>
@@ -112,7 +112,7 @@ export function HistoryPage() {
             id="produto"
             value={filtroProduto}
             onChange={(e) => setFiltroProduto(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="todos">Todos os Produtos</option>
             {mockProdutos.map(produto => (

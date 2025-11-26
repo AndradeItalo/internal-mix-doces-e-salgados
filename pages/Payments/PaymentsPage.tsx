@@ -106,7 +106,7 @@ export function PaymentsPage() {
             onClick={() => setFilter('todos')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'todos'
-                ? 'bg-pink-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -116,7 +116,7 @@ export function PaymentsPage() {
             onClick={() => setFilter('pendentes')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'pendentes'
-                ? 'bg-pink-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -126,7 +126,7 @@ export function PaymentsPage() {
             onClick={() => setFilter('recebidos')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'recebidos'
-                ? 'bg-pink-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >

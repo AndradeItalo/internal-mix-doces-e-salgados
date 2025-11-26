@@ -48,7 +48,7 @@ export function OrdersListPage() {
         </div>
         <button
           onClick={() => navigate('/orders/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Nova Encomenda
@@ -64,14 +64,14 @@ export function OrdersListPage() {
             placeholder="Buscar por cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
         >
           {statuses.map(status => (
             <option key={status} value={status}>
@@ -83,7 +83,7 @@ export function OrdersListPage() {
         <select
           value={mesFilter}
           onChange={(e) => setMesFilter(e.target.value)}
-          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
         >
           {meses.map(mes => (
             <option key={mes} value={mes}>
@@ -130,7 +130,7 @@ export function OrdersListPage() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => navigate(`/orders/${encomenda.id}`)}
-                      className="flex items-center gap-2 px-3 py-1 text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       Detalhes
