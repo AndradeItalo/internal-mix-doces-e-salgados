@@ -1,27 +1,63 @@
 import { ArrowLeft, Edit, MessageCircle, ShoppingBag, DollarSign } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { mockClientes, mockEncomendas } from '../../lib/mockData';
+import { useEffect, useState } from "react";
 
 export function ClientDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const cliente = mockClientes.find(c => c.id === id);
-  const encomendasCliente = mockEncomendas.filter(e => e.clienteId === id);
+  const [cliente, setCliente] = useState<any>(null);
+  const [encomendas, setEncomendas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const clientRes = await fetch(`http://localhost:3333/clients/${id}`);
+        if (!clientRes.ok) {
+          setCliente(null);
+          setLoading(false);
+          return;
+        }
+        const clientData = await clientRes.json();
+        setCliente(clientData);
+
+        // 2️⃣ Buscar encomendas do cliente (se existir a rota)
+        const ordersRes = await fetch(`http://localhost:3333/orders?clientId=${id}`);
+        if (ordersRes.ok) {
+          setEncomendas(await ordersRes.json());
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Erro ao carregar cliente:", error);
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-8">Carregando...</div>;
+  }
 
   if (!cliente) {
     return (
       <div className="p-8">
         <p className="text-gray-600">Cliente não encontrado</p>
-        <button onClick={() => navigate('/clients')} className="text-orange-600 hover:text-orange-700 mt-4">
+        <button
+          onClick={() => navigate("/clients")}
+          className="text-orange-600 hover:text-orange-700 mt-4"
+        >
           Voltar
         </button>
       </div>
     );
   }
 
-  const totalPago = encomendasCliente.reduce((acc, e) => acc + e.valorPago, 0);
-  const totalPendente = encomendasCliente.reduce((acc, e) => acc + e.valorPendente, 0);
+  const totalPago = encomendas.reduce((acc, e) => acc + e.valorPago, 0);
+  const totalPendente = encomendas.reduce((acc, e) => acc + e.valorPendente, 0);
 
   return (
     <div className="p-8">
@@ -103,11 +139,11 @@ export function ClientDetailsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-gray-900 mb-4">Histórico de Encomendas</h2>
         
-        {encomendasCliente.length === 0 ? (
+        {encomendas.length === 0 ? (
           <p className="text-gray-500">Nenhuma encomenda encontrada</p>
         ) : (
           <div className="space-y-4">
-            {encomendasCliente.map(encomenda => (
+            {encomendas.map(encomenda => (
               <div
                 key={encomenda.id}
                 className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors cursor-pointer"
