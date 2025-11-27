@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { mockEncomendas, mockClientes, mockProdutos } from '../../lib/mockData';
+import { clientsApi, type Client } from '../../lib/clients';
+import { productsApi, type Product } from '../../lib/products';
+import { ordersApi } from '../../lib/orders';
+import { paymentsApi } from '../../lib/payments';
 
 interface ItemTemp {
   produtoId: string;
@@ -22,34 +25,45 @@ export function OrderFormPage() {
   const [valorPagamento, setValorPagamento] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Pix');
 
+  const [clients, setClients] = useState<Client[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [selectedProdutoId, setSelectedProdutoId] = useState('');
   const [quantidade, setQuantidade] = useState('1');
 
   useEffect(() => {
-    if (id) {
-      const encomenda = mockEncomendas.find(e => e.id === id);
-      if (encomenda) {
-        setClienteId(encomenda.clienteId);
-        setItems(encomenda.items as ItemTemp[]);
-        setDataEntrega(encomenda.dataEntrega);
-        setObservacoes(encomenda.observacoes || '');
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [c, p] = await Promise.all([clientsApi.list(), productsApi.list()]);
+        setClients(c);
+        setProducts(p);
+        setError(null);
+        // Edição: poderíamos carregar order por id e mapear itens quando schema incluir items no front
+      } catch (e) {
+        setError('Falha ao carregar clientes/produtos');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    load();
   }, [id]);
 
   const handleAddItem = () => {
     if (!selectedProdutoId || !quantidade) return;
 
-    const produto = mockProdutos.find(p => p.id === selectedProdutoId);
+    const produto = products.find(p => p.id === selectedProdutoId);
     if (!produto) return;
 
     const qtd = parseFloat(quantidade);
     const newItem: ItemTemp = {
       produtoId: produto.id,
-      produto: produto.nome,
+      produto: produto.name,
       quantidade: qtd,
-      valorUnitario: produto.preco,
-      valorTotal: qtd * produto.preco,
+      valorUnitario: produto.price,
+      valorTotal: qtd * produto.price,
     };
 
     setItems([...items, newItem]);
@@ -63,18 +77,28 @@ export function OrderFormPage() {
 
   const valorTotalEncomenda = items.reduce((acc, item) => acc + item.valorTotal, 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Salvando encomenda:', {
-      clienteId,
-      items,
-      dataEntrega,
-      observacoes,
-      valorPagamento,
-      formaPagamento,
-      valorTotal: valorTotalEncomenda,
-    });
-    navigate('/orders');
+    try {
+      setLoading(true);
+      setError(null);
+      const payload = {
+        clientId: clienteId,
+        deliveryAt: dataEntrega || undefined,
+        status: 'pendente',
+        items: items.map(it => ({ productId: it.produtoId, quantity: it.quantidade, price: it.valorUnitario })),
+      };
+      const created = await ordersApi.create(payload as any);
+      const amount = parseFloat((valorPagamento || '').replace(',', '.'));
+      if (!isNaN(amount) && amount > 0) {
+        await paymentsApi.create({ orderId: created.id, amount, method: formaPagamento, paidAt: new Date().toISOString() });
+      }
+      navigate('/orders');
+    } catch (e) {
+      setError('Erro ao salvar encomenda');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -118,8 +142,8 @@ export function OrderFormPage() {
                 required
               >
                 <option value="">Selecione um cliente</option>
-                {mockClientes.map(cliente => (
-                  <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>
+                {clients.map(cliente => (
+                  <option key={cliente.id} value={cliente.id}>{cliente.name}</option>
                 ))}
               </select>
             </div>
@@ -171,9 +195,9 @@ export function OrderFormPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="">Selecione um produto</option>
-                {mockProdutos.map(produto => (
+                {products.map(produto => (
                   <option key={produto.id} value={produto.id}>
-                    {produto.nome} - R$ {produto.preco.toFixed(2)} / {produto.unidade}
+                    {produto.name} - R$ {produto.price.toFixed(2)}
                   </option>
                 ))}
               </select>

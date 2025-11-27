@@ -1,31 +1,53 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { mockClientes } from '../../lib/mockData';
+import { clientsApi, type Client } from '../../lib/clients';
 
 export function ClientFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const cliente = mockClientes.find(c => c.id === id);
-      if (cliente) {
-        setNome(cliente.nome);
-        setTelefone(cliente.telefone);
-        setObservacoes(cliente.observacoes || '');
+    const load = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const c: Client = await clientsApi.get(id);
+        setName(c.name || '');
+        setPhone(c.phone || '');
+        setNotes(c.notes || '');
+        setError(null);
+      } catch (e) {
+        setError('Não foi possível carregar o cliente.');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    load();
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Salvando cliente:', { nome, telefone, observacoes });
-    navigate('/clients');
+    try {
+      setLoading(true);
+      setError(null);
+      if (id) {
+        await clientsApi.update(id, { name, phone, notes });
+      } else {
+        await clientsApi.create({ name, phone, notes } as Omit<Client, 'id' | 'createdAt'>);
+      }
+      navigate('/clients');
+    } catch (e) {
+      setError('Erro ao salvar cliente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -52,6 +74,9 @@ export function ClientFormPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
+        {error && (
+          <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700">{error}</div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="nome" className="block text-gray-700 mb-2">
@@ -60,8 +85,8 @@ export function ClientFormPage() {
             <input
               id="nome"
               type="text"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               placeholder="Nome do cliente"
               required
@@ -75,8 +100,8 @@ export function ClientFormPage() {
             <input
               id="telefone"
               type="tel"
-              value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               placeholder="(11) 98765-4321"
               required
@@ -89,8 +114,8 @@ export function ClientFormPage() {
             </label>
             <textarea
               id="observacoes"
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               placeholder="Informações adicionais sobre o cliente"
               rows={4}
@@ -100,10 +125,11 @@ export function ClientFormPage() {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-60"
+              disabled={loading}
             >
               <Save className="w-5 h-5" />
-              Salvar Cliente
+              {id ? 'Atualizar' : 'Salvar'} Cliente
             </button>
             <button
               type="button"

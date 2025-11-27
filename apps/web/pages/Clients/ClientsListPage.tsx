@@ -1,15 +1,34 @@
-import { useState } from 'react';
-import { Plus, Search, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Search, Eye, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { mockClientes } from '../../lib/mockData';
+import { clientsApi, type Client } from '../../lib/clients';
 
 export function ClientsListPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredClientes = mockClientes.filter(cliente =>
-    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.telefone.includes(searchTerm)
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setLoading(true);
+        const data = await clientsApi.list();
+        setClients(data);
+        setError(null);
+      } catch (e) {
+        setError('Falha ao carregar clientes');
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  const filtered = clients.filter(c =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.phone || '').includes(searchTerm)
   );
 
   return (
@@ -56,37 +75,46 @@ export function ClientsListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredClientes.map((cliente) => (
-                <tr key={cliente.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-6 py-4 text-gray-900">{cliente.nome}</td>
-                  <td className="px-6 py-4 text-gray-600">{cliente.telefone}</td>
-                  <td className="px-6 py-4 text-gray-600">{cliente.totalEncomendas}</td>
-                  <td className="px-6 py-4">
-                    <span className={cliente.totalAberto > 0 ? 'text-orange-600' : 'text-green-600'}>
-                      R$ {cliente.totalAberto.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => navigate(`/clients/${cliente.id}`)}
-                      className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Ver Detalhes
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
+                      Carregando...
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-red-500">{error}</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhum cliente encontrado</td>
+                </tr>
+              ) : (
+                filtered.map((c) => (
+                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-4 text-gray-900">{c.name}</td>
+                    <td className="px-6 py-4 text-gray-600">{c.phone || '—'}</td>
+                    <td className="px-6 py-4 text-gray-600">—</td>
+                    <td className="px-6 py-4">—</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => navigate(`/clients/${c.id}`)}
+                        className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Ver Detalhes
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {filteredClientes.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Nenhum cliente encontrado</p>
-        </div>
-      )}
     </div>
   );
 }

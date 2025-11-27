@@ -1,22 +1,38 @@
-import { useState } from 'react';
-import { Plus, Search, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, Search, Eye, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { mockEncomendas } from '../../lib/mockData';
+import { ordersApi, type Order } from '../../lib/orders';
 
 export function OrdersListPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
-  const [mesFilter, setMesFilter] = useState('todos');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const statuses = ['todos', 'pendente', 'parcial', 'pago', 'cancelado'];
-  const meses = ['todos', 'Novembro', 'Dezembro'];
+  
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await ordersApi.list();
+        setOrders(data);
+        setError(null);
+      } catch (e) {
+        setError('Falha ao carregar encomendas');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const filteredEncomendas = mockEncomendas.filter(encomenda => {
-    const matchesSearch = encomenda.cliente.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'todos' || encomenda.status === statusFilter;
-    const matchesMes = mesFilter === 'todos' || true; // Simplified for demo
-    return matchesSearch && matchesStatus && matchesMes;
+  const filtered = orders.filter(o => {
+    const matchesSearch = o.clientId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'todos' || o.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
@@ -80,17 +96,7 @@ export function OrdersListPage() {
           ))}
         </select>
 
-        <select
-          value={mesFilter}
-          onChange={(e) => setMesFilter(e.target.value)}
-          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-        >
-          {meses.map(mes => (
-            <option key={mes} value={mes}>
-              {mes === 'todos' ? 'Todos os Meses' : mes}
-            </option>
-          ))}
-        </select>
+        <div />
       </div>
 
       {/* Table */}
@@ -109,45 +115,53 @@ export function OrdersListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredEncomendas.map((encomenda) => (
-                <tr key={encomenda.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-6 py-4 text-gray-900">{encomenda.cliente}</td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {new Date(encomenda.dataEntrega).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full ${getStatusColor(encomenda.status)}`}>
-                      {getStatusLabel(encomenda.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-900">R$ {encomenda.valorTotal.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-green-600">R$ {encomenda.valorPago.toFixed(2)}</td>
-                  <td className="px-6 py-4">
-                    <span className={encomenda.valorPendente > 0 ? 'text-orange-600' : 'text-gray-600'}>
-                      R$ {encomenda.valorPendente.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => navigate(`/orders/${encomenda.id}`)}
-                      className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Detalhes
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
+                      Carregando...
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-red-500">{error}</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">Nenhuma encomenda encontrada</td>
+                </tr>
+              ) : (
+                filtered.map((o) => (
+                  <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-4 text-gray-900">{o.clientId}</td>
+                    <td className="px-6 py-4 text-gray-600">{o.deliveryAt ? new Date(o.deliveryAt).toLocaleDateString('pt-BR') : '—'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full ${getStatusColor(o.status)}`}>
+                        {getStatusLabel(o.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-900">R$ {o.total.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-gray-600">—</td>
+                    <td className="px-6 py-4 text-gray-600">—</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => navigate(`/orders/${o.id}`)}
+                        className="flex items-center gap-2 px-3 py-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Detalhes
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {filteredEncomendas.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Nenhuma encomenda encontrada</p>
-        </div>
-      )}
     </div>
   );
 }
