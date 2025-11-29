@@ -1,51 +1,89 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { mockEncomendas, mockVendasRapidas, mockProdutos } from '../../lib/mockData';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { historyApi, type HistoryStats, type SalesByMonth, type TopProduct } from '../../lib/history';
+import { productsApi, type Product } from '../../lib/products';
+import { TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 
 export function HistoryPage() {
   const [filtroMes, setFiltroMes] = useState('todos');
   const [filtroProduto, setFiltroProduto] = useState('todos');
+  
+  const [stats, setStats] = useState<HistoryStats | null>(null);
+  const [salesByMonth, setSalesByMonth] = useState<SalesByMonth[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const meses = ['todos', 'Novembro', 'Dezembro'];
+  const meses = ['todos', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-  const produtosVendidos: { [key: string]: { nome: string; quantidade: number; total: number } } = {};
-
-  mockEncomendas.forEach(encomenda => {
-    encomenda.items.forEach(item => {
-      if (produtosVendidos[item.produtoId]) {
-        produtosVendidos[item.produtoId].quantidade += item.quantidade;
-        produtosVendidos[item.produtoId].total += item.valorTotal;
-      } else {
-        produtosVendidos[item.produtoId] = {
-          nome: item.produto,
-          quantidade: item.quantidade,
-          total: item.valorTotal
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Carregar produtos para o filtro
+        const productsData = await productsApi.list();
+        setProducts(productsData);
+        
+        // Carregar dados com filtros
+        const filters = {
+          month: filtroMes,
+          productId: filtroProduto
         };
+        
+        const [statsData, salesData, topProductsData] = await Promise.all([
+          historyApi.getStats(filters),
+          historyApi.getSalesByMonth(filtroProduto),
+          historyApi.getTopProducts(filters)
+        ]);
+        
+        setStats(statsData);
+        setSalesByMonth(salesData);
+        setTopProducts(topProductsData);
+      } catch (e) {
+        setError('Falha ao carregar dados do histórico');
+        console.error('Erro ao carregar dados:', e);
+      } finally {
+        setLoading(false);
       }
-    });
-  });
+    };
+    
+    loadData();
+  }, [filtroMes, filtroProduto]);
 
-  const produtosMaisVendidos = Object.entries(produtosVendidos)
-    .map(([id, data]) => ({ id, ...data }))
-    .sort((a, b) => b.quantidade - a.quantidade);
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
+            <span className="text-gray-600">Carregando dados...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const vendasPorMes = [
-    { mes: 'Jun', vendas: 2500 },
-    { mes: 'Jul', vendas: 3200 },
-    { mes: 'Ago', vendas: 2800 },
-    { mes: 'Set', vendas: 4100 },
-    { mes: 'Out', vendas: 3900 },
-    { mes: 'Nov', vendas: 4500 },
-  ];
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-500 text-center">
+            <p className="text-lg font-medium mb-2">Erro ao carregar dados</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const mesAtual = vendasPorMes[vendasPorMes.length - 1].vendas;
-  const mesAnterior = vendasPorMes[vendasPorMes.length - 2].vendas;
-  const crescimento = ((mesAtual - mesAnterior) / mesAnterior) * 100;
+  if (!stats) {
+    return null;
+  }
 
-  const totalVendasEncomendas = mockEncomendas.reduce((acc, e) => acc + e.valorTotal, 0);
-  const totalVendasRapidas = mockVendasRapidas.reduce((acc, v) => acc + v.valorTotal, 0);
-  const totalGeral = totalVendasEncomendas + totalVendasRapidas;
+  const crescimento = stats.crescimento;
 
   return (
     <div className="p-8">
@@ -57,8 +95,8 @@ export function HistoryPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <p className="text-gray-600 mb-2">Vendas Totais</p>
-          <p className="text-gray-900 mb-1">R$ {totalGeral.toFixed(2)}</p>
-          <p className="text-gray-600">{mockEncomendas.length} encomendas</p>
+          <p className="text-gray-900 mb-1">R$ {stats.totalVendas.toFixed(2)}</p>
+          <p className="text-gray-600">{stats.quantidadeEncomendas} encomendas</p>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -79,7 +117,7 @@ export function HistoryPage() {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <p className="text-gray-600 mb-2">Ticket Médio</p>
           <p className="text-gray-900 mb-1">
-            R$ {(totalVendasEncomendas / mockEncomendas.length).toFixed(2)}
+            R$ {stats.ticketMedio.toFixed(2)}
           </p>
           <p className="text-gray-600">Por encomenda</p>
         </div>
@@ -115,9 +153,9 @@ export function HistoryPage() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="todos">Todos os Produtos</option>
-            {mockProdutos.map(produto => (
+            {products.map(produto => (
               <option key={produto.id} value={produto.id}>
-                {produto.nome}
+                {produto.name}
               </option>
             ))}
           </select>
@@ -128,7 +166,7 @@ export function HistoryPage() {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-gray-900 mb-6">Vendas por Mês</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={vendasPorMes}>
+            <LineChart data={salesByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="mes" />
               <YAxis />
@@ -141,7 +179,7 @@ export function HistoryPage() {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-gray-900 mb-6">Produtos Mais Vendidos</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={produtosMaisVendidos.slice(0, 5)}>
+            <BarChart data={topProducts.slice(0, 5)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="nome" tick={{ fontSize: 12 }} />
               <YAxis />
@@ -166,7 +204,7 @@ export function HistoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {produtosMaisVendidos.map((produto) => (
+                {topProducts.map((produto) => (
                   <tr key={produto.id} className="border-b border-gray-100">
                     <td className="py-3 text-gray-900">{produto.nome}</td>
                     <td className="py-3 text-gray-600">{produto.quantidade}</td>

@@ -1,36 +1,132 @@
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
-import { mockVendasRapidas, mockProdutos } from '../../lib/mockData';
+import { useEffect, useState } from 'react';
+import { Plus, X, Loader2, Search, Eye, ArrowRight } from 'lucide-react';
+import { quickSalesApi, type QuickSale } from '../../lib/quicksales';
+import { productsApi, type Product } from '../../lib/products';
+import { clientsApi, type Client } from '../../lib/clients';
+import { useNavigate } from 'react-router-dom';
+
+interface ItemTemp {
+  productId: string;
+  product: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
 
 export function QuickSalesPage() {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [produtoId, setProdutoId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [quickSales, setQuickSales] = useState<QuickSale[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<ItemTemp[]>([]);
+  const [clienteId, setClienteId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [quantidade, setQuantidade] = useState('1');
-  const [cliente, setCliente] = useState('');
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [salesData, productsData, clientsData] = await Promise.all([
+          quickSalesApi.list(),
+          productsApi.list(),
+          clientsApi.list()
+        ]);
+        setQuickSales(salesData);
+        setProducts(productsData);
+        setClients(clientsData);
+        setError(null);
+      } catch (e) {
+        setError('Falha ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const filtered = quickSales.filter(sale => {
+    const productName = sale.items?.map(item => item.product?.name).join(', ') || '';
+    return productName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const hoje = new Date().toISOString().split('T')[0];
-  const vendasHoje = mockVendasRapidas.filter(v => v.data === hoje);
+  const vendasHoje = filtered.filter(v => v.createdAt.startsWith(hoje));
+  const totalVendasHoje = vendasHoje.reduce((acc, v) => acc + v.total, 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const produto = mockProdutos.find(p => p.id === produtoId);
-    if (produto) {
-      console.log('Registrando venda:', {
-        produtoId,
-        produto: produto.nome,
-        quantidade: parseFloat(quantidade),
-        valorTotal: parseFloat(quantidade) * produto.preco,
-        cliente: cliente || undefined,
-        data: hoje
-      });
-      setShowModal(false);
-      setProdutoId('');
-      setQuantidade('1');
-      setCliente('');
-    }
+  const handleAddItem = () => {
+    if (!selectedProductId || !quantidade) return;
+
+    const product = products.find(p => p.id === selectedProductId);
+    if (!product) return;
+
+    const qtd = parseInt(quantidade);
+    const newItem: ItemTemp = {
+      productId: product.id,
+      product: product.name,
+      quantity: qtd,
+      price: product.price,
+      total: qtd * product.price,
+    };
+
+    setItems([...items, newItem]);
+    setSelectedProductId('');
+    setQuantidade('1');
   };
 
-  const totalVendasHoje = vendasHoje.reduce((acc, v) => acc + v.valorTotal, 0);
+  const handleRemoveItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const valorTotalVenda = items.reduce((acc, item) => acc + item.total, 0);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      
+      if (items.length === 0) {
+        setError('Adicione pelo menos um produto');
+        return;
+      }
+
+      await quickSalesApi.create({
+        clientId: clienteId || undefined,
+        total: valorTotalVenda,
+        items: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      } as any);
+      
+      // Reload data
+      const [salesData, productsData, clientsData] = await Promise.all([
+        quickSalesApi.list(),
+        productsApi.list(),
+        clientsApi.list()
+      ]);
+      setQuickSales(salesData);
+      setProducts(productsData);
+      setClients(clientsData);
+      
+      setShowModal(false);
+      setItems([]);
+      setClienteId('');
+      setSelectedProductId('');
+      setQuantidade('1');
+    } catch (error) {
+      console.error('Erro ao registrar venda:', error);
+      setError('Falha ao registrar venda');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="p-8">
@@ -48,43 +144,99 @@ export function QuickSalesPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-        <h3 className="text-gray-900 mb-4">Vendas de Hoje</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-gray-600 mb-1">Total de Vendas</p>
-            <p className="text-gray-900">R$ {totalVendasHoje.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-gray-600 mb-1">Quantidade de Vendas</p>
-            <p className="text-gray-900">{vendasHoje.length}</p>
-          </div>
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por produto..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+        </div>
+        <div />
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-gray-600 mb-2">Vendas de Hoje</h3>
+          <p className="text-2xl font-bold text-gray-900">R$ {totalVendasHoje.toFixed(2)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-gray-600 mb-2">Quantidade Hoje</h3>
+          <p className="text-2xl font-bold text-gray-900">{vendasHoje.length}</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-gray-600 mb-2">Total de Vendas</h3>
+          <p className="text-2xl font-bold text-gray-900">{filtered.length}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6">
-          <h3 className="text-gray-900 mb-4">Histórico de Vendas Rápidas</h3>
-          
-          {mockVendasRapidas.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Nenhuma venda registrada</p>
-          ) : (
-            <div className="space-y-3">
-              {mockVendasRapidas.map((venda) => (
-                <div key={venda.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-gray-900">{venda.produto}</p>
-                    <div className="flex items-center gap-4 text-gray-600 mt-1">
-                      <span>Quantidade: {venda.quantidade}</span>
-                      <span>Data: {new Date(venda.data).toLocaleDateString('pt-BR')}</span>
-                      {venda.cliente && <span>Cliente: {venda.cliente}</span>}
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="text-left px-6 py-4 text-gray-700">Cliente</th>
+                <th className="text-left px-6 py-4 text-gray-700">Produtos</th>
+                <th className="text-left px-6 py-4 text-gray-700">Total</th>
+                <th className="text-left px-6 py-4 text-gray-700">Data</th>
+                <th className="text-left px-6 py-4 text-gray-700">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
+                      Carregando...
                     </div>
-                  </div>
-                  <p className="text-gray-900">R$ {venda.valorTotal.toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          )}
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-red-500">{error}</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhuma venda encontrada</td>
+                </tr>
+              ) : (
+                filtered.map((sale) => (
+                  <tr key={sale.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-4 text-gray-900">{sale.client?.name || '—'}</td>
+                    <td className="px-6 py-4 text-gray-600">
+                      <div className="space-y-1">
+                        {sale.items?.map((item, index) => (
+                          <div key={item.id} className="text-sm">
+                            <span className="text-gray-900">{item.product?.name || '—'}</span>
+                            <span className="text-gray-500 ml-2">x{item.quantity}</span>
+                          </div>
+                        )) || '—'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-gray-900">R$ {sale.total.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-gray-600">{new Date(sale.createdAt).toLocaleDateString('pt-BR')}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => navigate(`/quick-sales/${sale.id}`)}
+                        className="flex items-center gap-1 text-orange-600 hover:text-orange-700 px-3 py-1 rounded-lg hover:bg-orange-50 transition-colors"
+                        title="Ver detalhes da venda"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span className="text-sm">Detalhes</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -101,72 +253,106 @@ export function QuickSalesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="produto" className="block text-gray-700 mb-2">
-                  Produto *
+                <label htmlFor="cliente" className="block text-gray-700 mb-2">
+                  Cliente
                 </label>
                 <select
-                  id="produto"
-                  value={produtoId}
-                  onChange={(e) => setProdutoId(e.target.value)}
+                  id="cliente"
+                  value={clienteId}
+                  onChange={(e) => setClienteId(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  required
                 >
-                  <option value="">Selecione um produto</option>
-                  {mockProdutos.map(produto => (
-                    <option key={produto.id} value={produto.id}>
-                      {produto.nome} - R$ {produto.preco.toFixed(2)}
+                  <option value="">Selecione um cliente</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="quantidade" className="block text-gray-700 mb-2">
-                  Quantidade *
-                </label>
-                <input
-                  id="quantidade"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  required
-                />
+                <label className="block text-gray-700 mb-2">Adicionar Produtos</label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedProductId}
+                    onChange={(e) => setSelectedProductId(e.target.value)}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="">Selecione um produto</option>
+                    {products.map(product => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} - R$ {product.price.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(e.target.value)}
+                    className="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Qtd"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="cliente" className="block text-gray-700 mb-2">
-                  Cliente (opcional)
-                </label>
-                <input
-                  id="cliente"
-                  type="text"
-                  value={cliente}
-                  onChange={(e) => setCliente(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Nome do cliente"
-                />
-              </div>
-
-              {produtoId && quantidade && (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600 mb-1">Valor Total</p>
-                  <p className="text-gray-900">
-                    R$ {(parseFloat(quantidade) * (mockProdutos.find(p => p.id === produtoId)?.preco || 0)).toFixed(2)}
-                  </p>
+              {items.length > 0 && (
+                <div>
+                  <label className="block text-gray-700 mb-2">Itens da Venda</label>
+                  <div className="space-y-2">
+                    {items.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <span className="text-gray-900">{item.product}</span>
+                          <span className="text-gray-500 ml-2">x{item.quantity}</span>
+                          <span className="text-gray-600 ml-2">R$ {item.price.toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-900 font-medium">R$ {item.total.toFixed(2)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-gray-600 mb-1">Valor Total</p>
+                <p className="text-2xl font-bold text-gray-900">R$ {valorTotalVenda.toFixed(2)}</p>
+              </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Registrar Venda
+                  {submitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Registrando...
+                    </div>
+                  ) : (
+                    'Registrar Venda'
+                  )}
                 </button>
                 <button
                   type="button"

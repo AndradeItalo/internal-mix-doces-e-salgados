@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Client {
   id        String   @id @default(uuid())
   name      String
@@ -21,7 +20,8 @@ model Client {
   notes     String?
   createdAt DateTime @default(now())
 
-  orders    Order[]
+  orders Order[]
+  quickSales QuickSale[]
 }
 
 model Product {
@@ -32,40 +32,41 @@ model Product {
   createdAt   DateTime @default(now())
 
   orderItems  OrderItem[]
+  quickSaleItems QuickSaleItem[]
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  clientId    String
-  total       Float
-  deliveryAt  DateTime?
-  status      String
-  createdAt   DateTime @default(now())
+  id         String    @id @default(uuid())
+  clientId   String
+  total      Float
+  deliveryAt DateTime?
+  status     String
+  createdAt  DateTime  @default(now())
 
-  client      Client     @relation(fields: [clientId], references: [id])
-  items       OrderItem[]
-  payments    Payment[]
+  client   Client      @relation(fields: [clientId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
   orderId   String
   productId String
   quantity  Int
   price     Float
 
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model Payment {
-  id        String   @id @default(uuid())
-  orderId   String
-  amount    Float
-  method    String
-  paidAt    DateTime?
+  id      String    @id @default(uuid())
+  orderId String
+  amount  Float
+  method  String
+  paidAt  DateTime?
 
-  order     Order @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 }
 
 model Reminder {
@@ -73,5 +74,37 @@ model Reminder {
   message     String
   remindAt    DateTime
   createdAt   DateTime @default(now())
-  isCompleted Boolean   @default(false)
+  isCompleted Boolean  @default(false)
+}
+
+model QuickSale {
+  id        String     @id @default(uuid())
+  clientId  String?
+  total     Float
+  createdAt DateTime   @default(now())
+
+  client    Client?          @relation(fields: [clientId], references: [id])
+  items     QuickSaleItem[]
+  payments  QuickSalePayment[]
+}
+
+model QuickSaleItem {
+  id          String   @id @default(uuid())
+  quickSaleId String
+  productId   String
+  quantity    Int
+  price       Float
+
+  quickSale QuickSale @relation(fields: [quickSaleId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+}
+
+model QuickSalePayment {
+  id          String    @id @default(uuid())
+  quickSaleId String
+  amount      Float
+  method      String
+  paidAt      DateTime?
+
+  quickSale QuickSale @relation(fields: [quickSaleId], references: [id])
 }

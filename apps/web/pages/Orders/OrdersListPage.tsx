@@ -30,7 +30,8 @@ export function OrdersListPage() {
   }, []);
 
   const filtered = orders.filter(o => {
-    const matchesSearch = o.clientId.toLowerCase().includes(searchTerm.toLowerCase());
+    const clientName = o.client?.name || o.clientId;
+    const matchesSearch = clientName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || o.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -135,7 +136,7 @@ export function OrdersListPage() {
               ) : (
                 filtered.map((o) => (
                   <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-6 py-4 text-gray-900">{o.clientId}</td>
+                    <td className="px-6 py-4 text-gray-900">{o.client?.name || o.clientId}</td>
                     <td className="px-6 py-4 text-gray-600">{o.deliveryAt ? new Date(o.deliveryAt).toLocaleDateString('pt-BR') : '—'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full ${getStatusColor(o.status)}`}>
@@ -143,8 +144,8 @@ export function OrdersListPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-900">R$ {o.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-gray-600">—</td>
-                    <td className="px-6 py-4 text-gray-600">—</td>
+                    <td className="px-6 py-4 text-gray-600">R$ {o.payments?.reduce((total, payment) => total + payment.amount, 0).toFixed(2)}</td>
+                    <td className="px-6 py-4 text-gray-600">R$ {(o.total - (o.payments?.reduce((total, payment) => total + payment.amount, 0) ?? 0)).toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => navigate(`/orders/${o.id}`)}

@@ -7,7 +7,10 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
-      include: { client: { select: { id: true, name: true } } },
+      include: { 
+        client: { select: { id: true, name: true } },
+        payments: true
+      },
     });
     res.json(orders);
   } catch (error) {
