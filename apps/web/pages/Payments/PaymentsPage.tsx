@@ -1,9 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DollarSign, Calendar, CreditCard, Loader2 } from 'lucide-react';
+import { DollarSign, Calendar, CreditCard, Loader2, Package, ShoppingCart, User } from 'lucide-react';
 import { paymentsApi, type Payment } from '../../lib/payments';
+import { quickSalePaymentsApi, type QuickSalePayment } from '../../lib/quicksales';
+
+interface CombinedPayment {
+  id: string;
+  amount: number;
+  method: string;
+  paidAt?: string;
+  createdAt: string;
+  type: 'order' | 'quickSale';
+  orderId?: string;
+  quickSaleId?: string;
+  clientName?: string;
+  client?: {
+    id: string;
+    name: string;
+  };
+}
 
 export function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [orderPayments, setOrderPayments] = useState<Payment[]>([]);
+  const [quickSalePayments, setQuickSalePayments] = useState<QuickSalePayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'todos' | 'recebidos'>('todos');
@@ -12,8 +30,12 @@ export function PaymentsPage() {
     const load = async () => {
       try {
         setLoading(true);
-        const data = await paymentsApi.list();
-        setPayments(data);
+        const [orderData, quickSaleData] = await Promise.all([
+          paymentsApi.list(),
+          quickSalePaymentsApi.list()
+        ]);
+        setOrderPayments(orderData);
+        setQuickSalePayments(quickSaleData);
         setError(null);
       } catch (e) {
         setError('Falha ao carregar pagamentos');
@@ -24,17 +46,42 @@ export function PaymentsPage() {
     load();
   }, []);
 
+  // Combinar todos os pagamentos
+  const allPayments = useMemo(() => {
+    const combined: CombinedPayment[] = [
+      ...orderPayments.map(p => ({
+        ...p,
+        type: 'order' as const,
+        orderId: p.orderId,
+        clientName: p.order?.client?.name || 'Cliente não identificado'
+      })),
+      ...quickSalePayments.map(p => ({
+        ...p,
+        type: 'quickSale' as const,
+        quickSaleId: p.quickSaleId,
+        clientName: p.quickSale?.client?.name || 'Cliente não identificado'
+      }))
+    ];
+
+    // Ordenar por data de pagamento (ou criação se não tiver paidAt)
+    return combined.sort((a, b) => {
+      const dateA = a.paidAt ? new Date(a.paidAt).getTime() : new Date(a.createdAt).getTime();
+      const dateB = b.paidAt ? new Date(b.paidAt).getTime() : new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
+  }, [orderPayments, quickSalePayments]);
+
   const now = new Date();
   const month = now.getMonth();
   const year = now.getFullYear();
 
-  const received = useMemo(() => payments.filter(p => !!p.paidAt), [payments]);
+  const received = useMemo(() => allPayments.filter(p => !!p.paidAt), [allPayments]);
   const receivedThisMonth = useMemo(() => received.filter(p => {
     const d = new Date(p.paidAt!);
     return d.getMonth() === month && d.getFullYear() === year;
   }), [received, month, year]);
 
-  const filtered = filter === 'recebidos' ? receivedThisMonth : payments;
+  const filtered = filter === 'recebidos' ? receivedThisMonth : allPayments;
 
   const totalRecebidoMes = receivedThisMonth.reduce((acc, p) => acc + p.amount, 0);
 
@@ -100,7 +147,31 @@ export function PaymentsPage() {
               {filtered.map((p) => (
                 <div key={p.id} className="p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-gray-900">Pedido: {p.orderId}</div>
+                    <div className="flex items-center gap-3">
+                      {/* Tipo de pagamento */}
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        p.type === 'order' 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'bg-orange-100 text-orange-600'
+                      }`}>
+                        {p.type === 'order' ? (
+                          <Package className="w-4 h-4" />
+                        ) : (
+                          <ShoppingCart className="w-4 h-4" />
+                        )}
+                      </div>
+                      
+                      {/* Informações do pedido/venda */}
+                      <div>
+                        <div className="text-gray-900 font-medium">
+                          {p.type === 'order' ? 'Encomenda' : 'Venda Rápida'}: #{p.orderId || p.quickSaleId}
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600 text-sm">
+                          <User className="w-3 h-3" />
+                          {p.clientName}
+                        </div>
+                      </div>
+                    </div>
                     <div className="text-gray-900 font-medium">R$ {p.amount.toFixed(2)}</div>
                   </div>
                   <div className="flex items-center gap-4 text-gray-600">

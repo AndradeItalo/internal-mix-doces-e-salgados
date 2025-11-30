@@ -8,6 +8,15 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const payments = await prisma.payment.findMany({
       orderBy: { paidAt: "desc" },
+      include: {
+        order: {
+          include: {
+            client: {
+              select: { id: true, name: true }
+            }
+          }
+        }
+      }
     });
     res.json(payments);
   } catch (error) {

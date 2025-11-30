@@ -7,11 +7,14 @@ const router = Router();
 router.get("/", async (req: Request, res: Response) => {
   try {
     const payments = await prisma.quickSalePayment.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { paidAt: "desc" },
       include: {
         quickSale: {
-          select: { id: true, total: true },
-          include: { client: { select: { id: true, name: true } } }
+          include: {
+            client: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });
@@ -27,7 +30,7 @@ router.get("/quick-sale/:quickSaleId", async (req: Request, res: Response) => {
   try {
     const payments = await prisma.quickSalePayment.findMany({
       where: { quickSaleId: req.params.quickSaleId },
-      orderBy: { createdAt: "desc" }
+      orderBy: { paidAt: "desc" }
     });
     res.json(payments);
   } catch (error) {
@@ -43,8 +46,11 @@ router.get("/:id", async (req: Request, res: Response) => {
       where: { id: req.params.id },
       include: {
         quickSale: {
-          select: { id: true, total: true },
-          include: { client: { select: { id: true, name: true } } }
+          include: {
+            client: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });
@@ -90,8 +96,11 @@ router.post("/", async (req: Request, res: Response) => {
       },
       include: {
         quickSale: {
-          select: { id: true, total: true },
-          include: { client: { select: { id: true, name: true } } }
+          include: {
+            client: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });
@@ -140,8 +149,11 @@ router.put("/:id", async (req: Request, res: Response) => {
       },
       include: {
         quickSale: {
-          select: { id: true, total: true },
-          include: { client: { select: { id: true, name: true } } }
+          include: {
+            client: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });

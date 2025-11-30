@@ -8,6 +8,13 @@ export type QuickSalePayment = {
   method: string;
   paidAt?: string;
   createdAt: string;
+  quickSale?: {
+    id: string;
+    client?: {
+      id: string;
+      name: string;
+    };
+  };
 };
 
 export type QuickSaleItem = {

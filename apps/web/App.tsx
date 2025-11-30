@@ -14,6 +14,8 @@ import { OrderFormPage } from './pages/Orders/OrderFormPage';
 import { OrderDetailsPage } from './pages/Orders/OrderDetailsPage';
 import { PaymentsPage } from './pages/Payments/PaymentsPage';
 import { QuickSalesPage } from './pages/QuickSales/QuickSalesPage';
+import { QuickSalesListPage } from './pages/QuickSales/QuickSalesListPage';
+import { QuickSaleDetailsPage } from './pages/QuickSales/QuickSaleDetailsPage';
 import { HistoryPage } from './pages/History/HistoryPage';
 import { RemindersPage } from './pages/Reminders/RemindersPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
@@ -125,6 +127,8 @@ export default function App() {
 
           {/* Quick Sales */}
           <Route path="/quick-sales" element={<QuickSalesPage />} />
+          <Route path="/quick-sales/list" element={<QuickSalesListPage />} />
+          <Route path="/quick-sales/:id" element={<QuickSaleDetailsPage />} />
 
           {/* History */}
           <Route path="/history" element={<HistoryPage />} />

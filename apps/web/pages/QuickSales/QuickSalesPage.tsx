@@ -28,6 +28,40 @@ export function QuickSalesPage() {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [quantidade, setQuantidade] = useState('1');
 
+  const getPaymentStatus = (quickSale: QuickSale) => {
+    if (!quickSale.payments || quickSale.payments.length === 0) {
+      return 'pendente';
+    }
+    
+    const totalPaid = quickSale.payments.reduce((sum, payment) => sum + payment.amount, 0);
+    
+    if (totalPaid >= quickSale.total) {
+      return 'pago';
+    } else if (totalPaid > 0) {
+      return 'parcial';
+    }
+    
+    return 'pendente';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago': return 'bg-green-100 text-green-700';
+      case 'parcial': return 'bg-yellow-100 text-yellow-700';
+      case 'pendente': return 'bg-orange-100 text-orange-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pago': return 'Pago';
+      case 'parcial': return 'Parcial';
+      case 'pendente': return 'Pendente';
+      default: return status;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -184,6 +218,7 @@ export function QuickSalesPage() {
                 <th className="text-left px-6 py-4 text-gray-700">Cliente</th>
                 <th className="text-left px-6 py-4 text-gray-700">Produtos</th>
                 <th className="text-left px-6 py-4 text-gray-700">Total</th>
+                <th className="text-left px-6 py-4 text-gray-700">Status</th>
                 <th className="text-left px-6 py-4 text-gray-700">Data</th>
                 <th className="text-left px-6 py-4 text-gray-700">Ações</th>
               </tr>
@@ -221,16 +256,21 @@ export function QuickSalesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-900">R$ {sale.total.toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(getPaymentStatus(sale))}`}>
+                        {getStatusLabel(getPaymentStatus(sale))}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-gray-600">{new Date(sale.createdAt).toLocaleDateString('pt-BR')}</td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => navigate(`/quick-sales/${sale.id}`)}
-                        className="flex items-center gap-1 text-orange-600 hover:text-orange-700 px-3 py-1 rounded-lg hover:bg-orange-50 transition-colors"
-                        title="Ver detalhes da venda"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm">Detalhes</span>
-                      </button>
+                      onClick={() => navigate(`/quick-sales/${sale.id}`)}
+                      className="flex items-center gap-1 text-orange-600 hover:text-orange-700 px-3 py-1 rounded-lg hover:bg-orange-50 transition-colors"
+                      title="Ver detalhes da venda"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="text-sm">Detalhes</span>
+                    </button>
                     </td>
                   </tr>
                 ))

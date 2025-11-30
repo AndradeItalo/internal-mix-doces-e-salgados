@@ -31,8 +31,8 @@ export function QuickSaleDetailsPage() {
         setPayments(paymentsData);
         setError(null);
       } catch (e) {
-        setError('Falha ao carregar detalhes da venda rápida');
         console.error('Erro ao carregar dados:', e);
+        setError('Falha ao carregar detalhes da venda rápida');
       } finally {
         setLoading(false);
       }

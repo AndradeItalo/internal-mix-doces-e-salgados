@@ -45,14 +45,6 @@ export function QuickSalesListPage() {
     return 'pendente';
   };
 
-  const filtered = quickSales.filter(qs => {
-    const clientName = qs.client?.name || qs.clientId || 'Sem cliente';
-    const matchesSearch = clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const status = getPaymentStatus(qs);
-    const matchesStatus = statusFilter === 'todos' || status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pago': return 'bg-green-100 text-green-700';
@@ -70,6 +62,14 @@ export function QuickSalesListPage() {
       default: return status;
     }
   };
+
+  const filtered = quickSales.filter(qs => {
+    const clientName = qs.client?.name || qs.clientId || 'Sem cliente';
+    const matchesSearch = clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const status = getPaymentStatus(qs);
+    const matchesStatus = statusFilter === 'todos' || status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const getTotalPaid = (quickSale: QuickSale) => {
     if (!quickSale.payments || quickSale.payments.length === 0) {
