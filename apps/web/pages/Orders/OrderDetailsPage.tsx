@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Edit, CheckCircle, XCircle, DollarSign, Package } from 'lucide-react';
+import { ArrowLeft, Edit, CheckCircle, XCircle, DollarSign, Package, Check } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ordersApi, type Order } from '../../lib/orders';
 import { paymentsApi } from '../../lib/payments';
@@ -16,6 +16,7 @@ export function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -70,28 +71,64 @@ export function OrderDetailsPage() {
     }
   };
 
-  const handleMarcarEntregue = () => {
-    console.log('Marcando como entregue');
+  const handleMarcarEntregue = async () => {
+    if (!order) return;
+    
+    try {
+      // Atualizar o status para 'entregue'
+      await ordersApi.update(order.id, { status: 'entregue' });
+      
+      // Recarregar os dados da encomenda
+      const updatedOrder = await ordersApi.get(order.id);
+      setOrder(updatedOrder);
+      
+      // Mostrar feedback de sucesso
+      setSuccessMessage('Encomenda marcada como entregue com sucesso!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Erro ao marcar como entregue:', error);
+      setError('Erro ao marcar encomenda como entregue. Tente novamente.');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
-  const handleCancelar = () => {
+  const handleCancelar = async () => {
+    if (!order) return;
+    
     if (confirm('Tem certeza que deseja cancelar esta encomenda?')) {
-      console.log('Cancelando encomenda');
+      try {
+        // Atualizar o status para 'cancelado'
+        await ordersApi.update(order.id, { status: 'cancelado' });
+        
+        // Recarregar os dados da encomenda
+        const updatedOrder = await ordersApi.get(order.id);
+        setOrder(updatedOrder);
+        
+        // Mostrar feedback de sucesso
+        setSuccessMessage('Encomenda cancelada com sucesso!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } catch (error) {
+        console.error('Erro ao cancelar encomenda:', error);
+        setError('Erro ao cancelar encomenda. Tente novamente.');
+        setTimeout(() => setError(null), 3000);
+      }
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pago': return 'bg-green-500';
-      case 'parcial': return 'bg-yellow-500';
-      case 'pendente': return 'bg-orange-500';
-      case 'cancelado': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'entregue': return 'bg-blue-100 text-blue-700';
+      case 'pago': return 'bg-green-100 text-green-700';
+      case 'parcial': return 'bg-yellow-100 text-yellow-700';
+      case 'pendente': return 'bg-orange-100 text-orange-700';
+      case 'cancelado': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case 'entregue': return 'Encomenda Entregue';
       case 'pago': return 'Pago';
       case 'parcial': return 'Parcialmente Pago';
       case 'pendente': return 'Pagamento Pendente';
@@ -102,6 +139,21 @@ export function OrderDetailsPage() {
 
   return (
     <div className="p-8">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+          <Check className="w-5 h-5 text-green-600" />
+          <p className="text-green-700">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <XCircle className="w-5 h-5 text-red-600" />
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
       <button
         onClick={() => navigate('/orders')}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -186,7 +238,7 @@ export function OrderDetailsPage() {
           Registrar Pagamento
         </button>
 
-        {order.status !== 'cancelado' && (
+        {(order.status !== 'cancelado' && order.status !== 'entregue') && (
           <button
             onClick={handleMarcarEntregue}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

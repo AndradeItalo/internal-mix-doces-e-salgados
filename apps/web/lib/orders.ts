@@ -1,6 +1,18 @@
 import { apiGet, apiPost, apiPut, apiDelete } from './api';
 import type { Payment } from './payments';
 
+export type OrderItem = {
+  id: string;
+  orderId: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  product: {
+    id: string;
+    name: string;
+  };
+};
+
 export type Order = {
   id: string;
   clientId: string;
@@ -10,6 +22,7 @@ export type Order = {
   createdAt: string;
   payments?: Payment[];
   client?: { id: string; name: string };
+  items?: OrderItem[];
 };
 
 export const ordersApi = {

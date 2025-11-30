@@ -7,6 +7,13 @@ export type Payment = {
   method: string;
   paidAt?: string;
   createdAt: string;
+  order?: {
+    id: string;
+    client?: {
+      id: string;
+      name: string;
+    };
+  };
 };
 
 export const paymentsApi = {

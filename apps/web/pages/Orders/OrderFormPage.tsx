@@ -3,7 +3,7 @@ import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { clientsApi, type Client } from '../../lib/clients';
 import { productsApi, type Product } from '../../lib/products';
-import { ordersApi } from '../../lib/orders';
+import { ordersApi, type Order, type OrderItem } from '../../lib/orders';
 import { paymentsApi } from '../../lib/payments';
 
 interface ItemTemp {
@@ -21,7 +21,6 @@ export function OrderFormPage() {
   const [clienteId, setClienteId] = useState('');
   const [items, setItems] = useState<ItemTemp[]>([]);
   const [dataEntrega, setDataEntrega] = useState('');
-  const [observacoes, setObservacoes] = useState('');
   const [valorPagamento, setValorPagamento] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Pix');
 
@@ -41,9 +40,27 @@ export function OrderFormPage() {
         setClients(c);
         setProducts(p);
         setError(null);
-        // Edição: poderíamos carregar order por id e mapear itens quando schema incluir items no front
+
+        // Se tiver ID, carregar dados da encomenda para edição
+        if (id) {
+          const order = await ordersApi.get(id);
+          setClienteId(order.clientId || '');
+          setDataEntrega(order.deliveryAt ? new Date(order.deliveryAt).toISOString().split('T')[0] : '');
+          
+          // Carregar itens da encomenda
+          if (order.items) {
+            const mappedItems = order.items.map((item: OrderItem) => ({
+              produtoId: item.productId,
+              produto: item.product?.name || '',
+              quantidade: item.quantity,
+              valorUnitario: item.price,
+              valorTotal: item.quantity * item.price
+            }));
+            setItems(mappedItems);
+          }
+        }
       } catch (e) {
-        setError('Falha ao carregar clientes/produtos');
+        setError('Falha ao carregar dados');
       } finally {
         setLoading(false);
       }
@@ -88,11 +105,20 @@ export function OrderFormPage() {
         status: 'pendente',
         items: items.map(it => ({ productId: it.produtoId, quantity: it.quantidade, price: it.valorUnitario })),
       };
-      const created = await ordersApi.create(payload as any);
-      const amount = parseFloat((valorPagamento || '').replace(',', '.'));
-      if (!isNaN(amount) && amount > 0) {
-        await paymentsApi.create({ orderId: created.id, amount, method: formaPagamento, paidAt: new Date().toISOString() });
+      
+      let order;
+      if (id) {
+        // Modo edição
+        order = await ordersApi.update(id, payload as any);
+      } else {
+        // Modo criação
+        order = await ordersApi.create(payload as any);
+        const amount = parseFloat((valorPagamento || '').replace(',', '.'));
+        if (!isNaN(amount) && amount > 0) {
+          await paymentsApi.create({ orderId: order.id, amount, method: formaPagamento, paidAt: new Date().toISOString() });
+        }
       }
+      
       navigate('/orders');
     } catch (e) {
       setError('Erro ao salvar encomenda');
@@ -161,20 +187,6 @@ export function OrderFormPage() {
                 required
               />
             </div>
-          </div>
-
-          <div className="mt-6">
-            <label htmlFor="observacoes" className="block text-gray-700 mb-2">
-              Observações
-            </label>
-            <textarea
-              id="observacoes"
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Informações adicionais sobre a encomenda"
-              rows={3}
-            />
           </div>
         </div>
 
@@ -320,7 +332,7 @@ export function OrderFormPage() {
             className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
-            Salvar Encomenda
+            {id ? 'Atualizar Encomenda' : 'Salvar Encomenda'}
           </button>
           <button
             type="button"
