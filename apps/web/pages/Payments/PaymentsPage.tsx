@@ -25,6 +25,7 @@ export function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'todos' | 'recebidos'>('todos');
+  const [monthFilter, setMonthFilter] = useState('todos');
   
   // Estados para edição
   const [editingPayment, setEditingPayment] = useState<CombinedPayment | null>(null);
@@ -34,6 +35,7 @@ export function PaymentsPage() {
   const [saving, setSaving] = useState(false);
 
   const paymentMethods = ['dinheiro', 'cartão', 'pix', 'transferência'];
+  const months = ['todos', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   useEffect(() => {
     const load = async () => {
@@ -81,16 +83,35 @@ export function PaymentsPage() {
   }, [orderPayments, quickSalePayments]);
 
   const now = new Date();
-  const month = now.getMonth();
-  const year = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
 
   const received = useMemo(() => allPayments.filter(p => !!p.paidAt), [allPayments]);
   const receivedThisMonth = useMemo(() => received.filter(p => {
     const d = new Date(p.paidAt!);
-    return d.getMonth() === month && d.getFullYear() === year;
-  }), [received, month, year]);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  }), [received, currentMonth, currentYear]);
 
-  const filtered = filter === 'recebidos' ? receivedThisMonth : allPayments;
+  // Aplicar filtros
+  const filtered = useMemo(() => {
+    let filtered = allPayments;
+    
+    // Filtro por status
+    if (filter === 'recebidos') {
+      filtered = received;
+    }
+    
+    // Filtro por mês
+    if (monthFilter !== 'todos') {
+      const monthIndex = months.indexOf(monthFilter) - 1; // -1 porque 'todos' está no início
+      filtered = filtered.filter(p => {
+        const date = new Date(p.paidAt || p.createdAt);
+        return date.getMonth() === monthIndex && date.getFullYear() === currentYear;
+      });
+    }
+    
+    return filtered;
+  }, [allPayments, filter, monthFilter, received, months, currentYear]);
 
   const totalRecebidoMes = receivedThisMonth.reduce((acc, p) => acc + p.amount, 0);
 
@@ -163,27 +184,44 @@ export function PaymentsPage() {
       </div>
 
       <div className="mb-6">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilter('todos')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'todos'
-                ? 'bg-orange-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Todos
-          </button>
-          <button
-            onClick={() => setFilter('recebidos')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'recebidos'
-                ? 'bg-orange-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            Recebidos (Mês)
-          </button>
+        <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('todos')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                filter === 'todos'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilter('recebidos')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                filter === 'recebidos'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Recebidos (Mês)
+            </button>
+          </div>
+          
+          <div className="flex gap-2 items-center">
+            <span className="text-gray-600 text-sm">Mês:</span>
+            <select
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              {months.map(month => (
+                <option key={month} value={month}>
+                  {month === 'todos' ? 'Todos os Meses' : month}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
