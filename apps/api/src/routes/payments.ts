@@ -61,9 +61,21 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { orderId, amount, method, paidAt } = req.body;
+    
+    // Converter a data corretamente para evitar problemas de timezone
+    let paidAtDate: Date | undefined = undefined;
+    if (paidAt) {
+      // Se for uma string ISO, criar mantendo a data local
+      if (typeof paidAt === 'string') {
+        const date = new Date(paidAt);
+        // Ajustar para manter a data correta (evitar timezone shift)
+        paidAtDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+      }
+    }
+    
     const payment = await prisma.payment.update({
       where: { id: req.params.id },
-      data: { orderId, amount, method, paidAt },
+      data: { orderId, amount, method, paidAt: paidAtDate },
     });
     res.json(payment);
   } catch (error) {

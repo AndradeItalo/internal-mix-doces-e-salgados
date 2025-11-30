@@ -140,12 +140,23 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Valor do pagamento excede o total da venda" });
     }
 
+    // Converter a data corretamente para evitar problemas de timezone
+    let paidAtDate: Date | undefined = undefined;
+    if (paidAt) {
+      // Se for uma string ISO, criar mantendo a data local
+      if (typeof paidAt === 'string') {
+        const date = new Date(paidAt);
+        // Ajustar para manter a data correta (evitar timezone shift)
+        paidAtDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+      }
+    }
+
     const payment = await prisma.quickSalePayment.update({
       where: { id: req.params.id },
       data: {
         amount,
         method,
-        paidAt: paidAt ? new Date(paidAt) : undefined
+        paidAt: paidAtDate,
       },
       include: {
         quickSale: {
