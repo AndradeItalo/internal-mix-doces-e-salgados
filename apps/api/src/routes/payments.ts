@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { parseDateSafe } from "../utils/dateUtils";
 
 const router = Router();
 
@@ -47,8 +48,11 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const { orderId, amount, method, paidAt } = req.body;
 
+    // Converter a data corretamente para evitar problemas de timezone
+    const paidAtDate = parseDateSafe(paidAt);
+
     const payment = await prisma.payment.create({
-      data: { orderId, amount, method, paidAt },
+      data: { orderId, amount, method, paidAt: paidAtDate },
     });
 
     res.status(201).json(payment);
@@ -63,15 +67,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     const { orderId, amount, method, paidAt } = req.body;
     
     // Converter a data corretamente para evitar problemas de timezone
-    let paidAtDate: Date | undefined = undefined;
-    if (paidAt) {
-      // Se for uma string ISO, criar mantendo a data local
-      if (typeof paidAt === 'string') {
-        const date = new Date(paidAt);
-        // Ajustar para manter a data correta (evitar timezone shift)
-        paidAtDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
-      }
-    }
+    const paidAtDate = parseDateSafe(paidAt);
     
     const payment = await prisma.payment.update({
       where: { id: req.params.id },

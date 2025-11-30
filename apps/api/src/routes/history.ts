@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { parseDateSafe } from "../utils/dateUtils";
 
 const router = Router();
 
@@ -82,18 +83,18 @@ router.get("/stats", async (req: Request, res: Response) => {
       
       if (monthNum !== undefined && monthNum > 0) {
         // Mês atual
-        const currentMonthStart = new Date(year, monthNum, 1);
-        const currentMonthEnd = new Date(year, monthNum + 1, 1);
+        const currentMonthStart = new Date(year, monthNum, 1, 12, 0, 0);
+        const currentMonthEnd = new Date(year, monthNum + 1, 1, 12, 0, 0);
         
         // Mês anterior
-        const previousMonthStart = new Date(year, monthNum - 1, 1);
-        const previousMonthEnd = new Date(year, monthNum, 1);
+        const previousMonthStart = new Date(year, monthNum - 1, 1, 12, 0, 0);
+        const previousMonthEnd = new Date(year, monthNum, 1, 12, 0, 0);
         
         const currentOrders = await prisma.order.findMany({
           where: {
             createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
             ...(productId && productId !== 'todos' && {
-              items: { some: { productId } }
+              items: { some: { productId: productId as string } }
             })
           }
         });
@@ -102,7 +103,7 @@ router.get("/stats", async (req: Request, res: Response) => {
           where: {
             createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
             ...(productId && productId !== 'todos' && {
-              items: { some: { productId } }
+              items: { some: { productId: productId as string } }
             })
           }
         });
@@ -111,7 +112,7 @@ router.get("/stats", async (req: Request, res: Response) => {
           where: {
             createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
             ...(productId && productId !== 'todos' && {
-              items: { some: { productId } }
+              items: { some: { productId: productId as string } }
             })
           }
         });
@@ -120,7 +121,7 @@ router.get("/stats", async (req: Request, res: Response) => {
           where: {
             createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
             ...(productId && productId !== 'todos' && {
-              items: { some: { productId } }
+              items: { some: { productId: productId as string } }
             })
           }
         });

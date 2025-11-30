@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { ReminderService } from "../services/reminderService";
+import { parseDateSafe } from "../utils/dateUtils";
 
 const router = Router();
 
@@ -56,11 +58,13 @@ router.post("/", async (req: Request, res: Response) => {
 
     const total = items.reduce((acc, it) => acc + it.quantity * it.price, 0);
 
+    // Converter a data corretamente para evitar problemas de timezone
+    const deliveryAtDate = parseDateSafe(deliveryAt);
     const order = await prisma.order.create({
       data: {
         clientId,
         total,
-        deliveryAt: deliveryAt ? new Date(deliveryAt) : undefined,
+        deliveryAt: deliveryAtDate,
         status,
         items: {
           create: items.map((it) => ({
@@ -73,6 +77,16 @@ router.post("/", async (req: Request, res: Response) => {
       include: { items: true },
     });
 
+    // Criar lembrete automaticamente se tiver data de entrega
+    if (deliveryAt) {
+      try {
+        await ReminderService.createReminderForOrder(order.id);
+      } catch (reminderError) {
+        console.error("Erro ao criar lembrete automático:", reminderError);
+        // Não falhar a criação da encomenda se o lembrete falhar
+      }
+    }
+
     res.status(201).json(order);
   } catch (error) {
     console.error("Erro ao criar encomenda", error);
@@ -83,10 +97,35 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { clientId, total, deliveryAt, status } = req.body;
+    
+    // Buscar encomenda atual para verificar mudanças
+    const currentOrder = await prisma.order.findUnique({
+      where: { id: req.params.id }
+    });
+    
+    // Converter a data corretamente para evitar problemas de timezone
+    const deliveryAtDate = parseDateSafe(deliveryAt);
+    
     const order = await prisma.order.update({
       where: { id: req.params.id },
-      data: { clientId, total, deliveryAt, status },
+      data: { clientId, total, deliveryAt: deliveryAtDate, status },
     });
+    
+    // Gerenciar lembretes baseado nas mudanças
+    try {
+      if (status === 'entregue' && currentOrder?.status !== 'entregue') {
+        // Se foi entregue, remover lembrete
+        await ReminderService.removeReminderForOrder(req.params.id);
+      } else if (deliveryAtDate && (!currentOrder?.deliveryAt || deliveryAtDate.getTime() !== new Date(currentOrder.deliveryAt).getTime())) {
+        // Se mudou a data de entrega, recriar lembrete
+        await ReminderService.removeReminderForOrder(req.params.id);
+        await ReminderService.createReminderForOrder(req.params.id);
+      }
+    } catch (reminderError) {
+      console.error("Erro ao gerenciar lembretes:", reminderError);
+      // Não falhar a atualização da encomenda
+    }
+    
     res.json(order);
   } catch (error) {
     console.error("Erro ao atualizar encomenda", error);

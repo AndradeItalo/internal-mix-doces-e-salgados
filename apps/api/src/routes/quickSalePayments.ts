@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { parseDateSafe } from "../utils/dateUtils";
 
 const router = Router();
 
@@ -87,12 +88,19 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Valor do pagamento excede o total da venda" });
     }
 
+    // Converter a data corretamente para evitar problemas de timezone
+    const paidAtDate = parseDateSafe(paidAt) || (() => {
+      // Se não informar data, usar data atual com meio-dia
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+    })();
+
     const payment = await prisma.quickSalePayment.create({
       data: {
         quickSaleId,
         amount,
         method,
-        paidAt: paidAt ? new Date(paidAt) : new Date()
+        paidAt: paidAtDate,
       },
       include: {
         quickSale: {
@@ -141,15 +149,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // Converter a data corretamente para evitar problemas de timezone
-    let paidAtDate: Date | undefined = undefined;
-    if (paidAt) {
-      // Se for uma string ISO, criar mantendo a data local
-      if (typeof paidAt === 'string') {
-        const date = new Date(paidAt);
-        // Ajustar para manter a data correta (evitar timezone shift)
-        paidAtDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
-      }
-    }
+    const paidAtDate = parseDateSafe(paidAt);
 
     const payment = await prisma.quickSalePayment.update({
       where: { id: req.params.id },

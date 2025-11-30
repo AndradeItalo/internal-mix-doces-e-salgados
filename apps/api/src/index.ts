@@ -9,6 +9,7 @@ import paymentsRouter from "./routes/payments";
 import remindersRouter from "./routes/reminders";
 import settingsRouter from "./routes/settings";
 import historyRouter from "./routes/history";
+import { ReminderScheduler } from "./jobs/reminderScheduler";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -32,4 +33,7 @@ app.use("/api/history", historyRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
+  
+  // Iniciar o agendador de lembretes
+  ReminderScheduler.start();
 });
