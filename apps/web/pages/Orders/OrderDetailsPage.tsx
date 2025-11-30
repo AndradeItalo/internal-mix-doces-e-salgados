@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Edit, CheckCircle, XCircle, DollarSign, Package, Check } from 'lucide-react';
+import { ArrowLeft, Edit, CheckCircle, XCircle, DollarSign, Package, Check, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ordersApi, type Order } from '../../lib/orders';
 import { paymentsApi } from '../../lib/payments';
@@ -12,6 +12,8 @@ export function OrderDetailsPage() {
   const [valorPagamento, setValorPagamento] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Pix');
   const [observacaoPagamento, setObservacaoPagamento] = useState('');
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,24 +97,32 @@ export function OrderDetailsPage() {
   const handleCancelar = async () => {
     if (!order) return;
     
-    if (confirm('Tem certeza que deseja cancelar esta encomenda?')) {
-      try {
-        // Atualizar o status para 'cancelado'
-        await ordersApi.update(order.id, { status: 'cancelado' });
-        
-        // Recarregar os dados da encomenda
-        const updatedOrder = await ordersApi.get(order.id);
-        setOrder(updatedOrder);
-        
-        // Mostrar feedback de sucesso
-        setSuccessMessage('Encomenda cancelada com sucesso!');
-        setTimeout(() => setSuccessMessage(null), 3000);
-      } catch (error) {
-        console.error('Erro ao cancelar encomenda:', error);
-        setError('Erro ao cancelar encomenda. Tente novamente.');
-        setTimeout(() => setError(null), 3000);
-      }
+    setShowCancelModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!order) return;
+    
+    try {
+      // Atualizar o status para 'cancelado'
+      await ordersApi.update(order.id, { status: 'cancelado' });
+      
+      // Recarregar os dados da encomenda
+      const updatedOrder = await ordersApi.get(order.id);
+      setOrder(updatedOrder);
+      
+      // Mostrar feedback de sucesso
+      setSuccessMessage('Encomenda cancelada com sucesso!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      setShowCancelModal(false);
+    } catch (e) {
+      setError('Erro ao cancelar encomenda. Tente novamente.');
+      setTimeout(() => setError(null), 3000);
     }
+  };
+
+  const cancelCancel = () => {
+    setShowCancelModal(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -330,6 +340,45 @@ export function OrderDetailsPage() {
                 className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Cancelamento */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-gray-900 font-semibold">Confirmar Cancelamento</h3>
+                <p className="text-gray-600 text-sm">Tem certeza que deseja cancelar esta encomenda?</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-3 mb-6">
+              <p className="text-gray-700 text-sm">
+                Esta ação não pode ser desfeita. A encomenda será marcada como cancelada e não poderá mais ser entregue.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={confirmCancel}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                Sim, Cancelar
+              </button>
+              <button
+                onClick={cancelCancel}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Voltar
               </button>
             </div>
           </div>

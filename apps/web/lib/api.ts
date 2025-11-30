@@ -24,6 +24,16 @@ export async function apiPut<T>(path: string, body: any): Promise<T> {
   return res.json();
 }
 
+export async function apiPatch<T>(path: string, body: any): Promise<T> {
+  const res = await fetch(path, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`PATCH ${path} failed: ${res.status}`);
+  return res.json();
+}
+
 export async function apiDelete(path: string): Promise<void> {
   const res = await fetch(path, { method: 'DELETE' });
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
