@@ -1,12 +1,10 @@
 import { 
-  LayoutDashboard, 
   Users, 
   Package, 
   ShoppingBag, 
   CreditCard, 
-  TrendingUp, 
+  CalendarDays,
   Clock, 
-  Bell, 
   Settings,
   LogOut,
   Cake
@@ -22,14 +20,12 @@ export function Sidebar({ onLogout }: SidebarProps) {
   const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/clients', label: 'Clientes', icon: Users },
     { path: '/products', label: 'Produtos', icon: Package },
     { path: '/orders', label: 'Encomendas', icon: ShoppingBag },
+    { path: '/orders/agenda', label: 'Agenda', icon: CalendarDays },
     { path: '/payments', label: 'Pagamentos', icon: CreditCard },
-    { path: '/quick-sales', label: 'Vendas Rápidas', icon: TrendingUp },
     { path: '/history', label: 'Histórico', icon: Clock },
-    { path: '/reminders', label: 'Lembretes', icon: Bell },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 

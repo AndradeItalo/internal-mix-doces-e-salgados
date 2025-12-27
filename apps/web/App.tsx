@@ -3,21 +3,17 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { Menu } from 'lucide-react';
 
 import { LoginPage } from './pages/Auth/LoginPage';
-import { DashboardPage } from './pages/Dashboard/DashboardPage';
 import { ClientsListPage } from './pages/Clients/ClientsListPage';
 import { ClientFormPage } from './pages/Clients/ClientFormPage';
 import { ClientDetailsPage } from './pages/Clients/ClientDetailsPage';
 import { ProductsListPage } from './pages/Products/ProductsListPage';
 import { ProductFormPage } from './pages/Products/ProductFormPage';
 import { OrdersListPage } from './pages/Orders/OrdersListPage';
+import { OrdersAgendaPage } from './pages/Orders/OrdersAgendaPage';
 import { OrderFormPage } from './pages/Orders/OrderFormPage';
 import { OrderDetailsPage } from './pages/Orders/OrderDetailsPage';
 import { PaymentsPage } from './pages/Payments/PaymentsPage';
-import { QuickSalesPage } from './pages/QuickSales/QuickSalesPage';
-import { QuickSalesListPage } from './pages/QuickSales/QuickSalesListPage';
-import { QuickSaleDetailsPage } from './pages/QuickSales/QuickSaleDetailsPage';
 import { HistoryPage } from './pages/History/HistoryPage';
-import { RemindersPage } from './pages/Reminders/RemindersPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { Sidebar } from './components/Sidebar';
 
@@ -94,7 +90,7 @@ export default function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
+              <Navigate to="/orders" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
             )
@@ -102,8 +98,7 @@ export default function App() {
         />
 
         <Route element={<PrivateLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/" element={<Navigate to="/orders" replace />} />
 
           {/* Clients */}
           <Route path="/clients" element={<ClientsListPage />} />
@@ -118,6 +113,7 @@ export default function App() {
 
           {/* Orders */}
           <Route path="/orders" element={<OrdersListPage />} />
+          <Route path="/orders/agenda" element={<OrdersAgendaPage />} />
           <Route path="/orders/new" element={<OrderFormPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />
           <Route path="/orders/:id/edit" element={<OrderFormPage />} />
@@ -125,16 +121,8 @@ export default function App() {
           {/* Payments */}
           <Route path="/payments" element={<PaymentsPage />} />
 
-          {/* Quick Sales */}
-          <Route path="/quick-sales" element={<QuickSalesPage />} />
-          <Route path="/quick-sales/list" element={<QuickSalesListPage />} />
-          <Route path="/quick-sales/:id" element={<QuickSaleDetailsPage />} />
-
           {/* History */}
           <Route path="/history" element={<HistoryPage />} />
-
-          {/* Reminders */}
-          <Route path="/reminders" element={<RemindersPage />} />
 
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />

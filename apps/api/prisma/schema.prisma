@@ -40,6 +40,7 @@ model Order {
   clientId   String
   total      Float
   deliveryAt DateTime?
+  deliveryHour String?
   status     String
   createdAt  DateTime  @default(now())
 

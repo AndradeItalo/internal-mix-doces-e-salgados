@@ -18,6 +18,7 @@ export type Order = {
   clientId: string;
   total: number;
   deliveryAt?: string;
+  deliveryHour?: string;
   status: string;
   createdAt: string;
   payments?: Payment[];

@@ -45,9 +45,10 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { clientId, deliveryAt, status, items } = req.body as {
+    const { clientId, deliveryAt, deliveryHour, status, items } = req.body as {
       clientId: string;
       deliveryAt?: string;
+      deliveryHour?: string;
       status: string;
       items: Array<{ productId: string; quantity: number; price: number }>;
     };
@@ -64,7 +65,8 @@ router.post("/", async (req: Request, res: Response) => {
       data: {
         clientId,
         total,
-        deliveryAt: deliveryAtDate,
+        deliveryAt: deliveryAt ? new Date(deliveryAt) : undefined,
+        deliveryHour: deliveryHour !== undefined ? deliveryHour : undefined,
         status,
         items: {
           create: items.map((it) => ({
@@ -96,7 +98,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const { clientId, total, deliveryAt, status } = req.body;
+    const { clientId, total, deliveryAt, deliveryHour, status } = req.body;
     
     // Buscar encomenda atual para verificar mudanças
     const currentOrder = await prisma.order.findUnique({
@@ -108,7 +110,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     
     const order = await prisma.order.update({
       where: { id: req.params.id },
-      data: { clientId, total, deliveryAt: deliveryAtDate, status },
+      data: { clientId, total, deliveryAt: deliveryAtDate, deliveryHour, status },
     });
     
     // Gerenciar lembretes baseado nas mudanças

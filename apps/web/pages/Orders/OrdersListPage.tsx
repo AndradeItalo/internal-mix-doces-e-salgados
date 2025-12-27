@@ -110,6 +110,7 @@ export function OrdersListPage() {
               <tr>
                 <th className="text-left px-6 py-4 text-gray-700">Cliente</th>
                 <th className="text-left px-6 py-4 text-gray-700">Data Entrega</th>
+                <th className="text-left px-6 py-4 text-gray-700">Horário</th>
                 <th className="text-left px-6 py-4 text-gray-700">Status</th>
                 <th className="text-left px-6 py-4 text-gray-700">Valor Total</th>
                 <th className="text-left px-6 py-4 text-gray-700">Valor Pago</th>
@@ -120,7 +121,7 @@ export function OrdersListPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
                       Carregando...
@@ -129,17 +130,18 @@ export function OrdersListPage() {
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-red-500">{error}</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-red-500">{error}</td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">Nenhuma encomenda encontrada</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Nenhuma encomenda encontrada</td>
                 </tr>
               ) : (
                 filtered.map((o) => (
                   <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-4 text-gray-900">{o.client?.name || o.clientId}</td>
                     <td className="px-6 py-4 text-gray-600">{o.deliveryAt ? new Date(o.deliveryAt).toLocaleDateString('pt-BR') : '—'}</td>
+                    <td className="px-6 py-4 text-gray-600">{o.deliveryHour || '—'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full ${getStatusColor(o.status)}`}>
                         {getStatusLabel(o.status)}

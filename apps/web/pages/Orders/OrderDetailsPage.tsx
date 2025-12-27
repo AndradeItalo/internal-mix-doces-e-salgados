@@ -219,6 +219,37 @@ export function OrderDetailsPage() {
         </div>
       </div>
 
+      {/* Produtos da Encomenda */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h3 className="text-gray-900 mb-4">Produtos</h3>
+        {!order.items || order.items.length === 0 ? (
+          <p className="text-gray-500">Nenhum produto registrado</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-gray-700">Produto</th>
+                  <th className="text-left px-4 py-3 text-gray-700">Qtd</th>
+                  <th className="text-left px-4 py-3 text-gray-700">Valor Unit.</th>
+                  <th className="text-left px-4 py-3 text-gray-700">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items.map((it) => (
+                  <tr key={it.id} className="border-b border-gray-100">
+                    <td className="px-4 py-3 text-gray-900">{it.product?.name || it.productId}</td>
+                    <td className="px-4 py-3 text-gray-600">{it.quantity}</td>
+                    <td className="px-4 py-3 text-gray-600">R$ {it.price.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-gray-900">R$ {(it.quantity * it.price).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Histórico de Pagamentos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h3 className="text-gray-900 mb-4">Histórico de Pagamentos</h3>

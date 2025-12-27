@@ -21,6 +21,7 @@ export function OrderFormPage() {
   const [clienteId, setClienteId] = useState('');
   const [items, setItems] = useState<ItemTemp[]>([]);
   const [dataEntrega, setDataEntrega] = useState('');
+  const [horaEntrega, setHoraEntrega] = useState('');
   const [valorPagamento, setValorPagamento] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Pix');
 
@@ -46,6 +47,7 @@ export function OrderFormPage() {
           const order = await ordersApi.get(id);
           setClienteId(order.clientId || '');
           setDataEntrega(order.deliveryAt ? new Date(order.deliveryAt).toISOString().split('T')[0] : '');
+          setHoraEntrega(order.deliveryHour || '');
           
           // Carregar itens da encomenda
           if (order.items) {
@@ -102,6 +104,7 @@ export function OrderFormPage() {
       const payload = {
         clientId: clienteId,
         deliveryAt: dataEntrega || undefined,
+        deliveryHour: horaEntrega || undefined,
         status: 'pendente',
         items: items.map(it => ({ productId: it.produtoId, quantity: it.quantidade, price: it.valorUnitario })),
       };
@@ -155,7 +158,7 @@ export function OrderFormPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-gray-900 mb-4">Informações Gerais</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="cliente" className="block text-gray-700 mb-2">
                 Cliente *
@@ -185,6 +188,19 @@ export function OrderFormPage() {
                 onChange={(e) => setDataEntrega(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="horaEntrega" className="block text-gray-700 mb-2">
+                Horário de Entrega
+              </label>
+              <input
+                id="horaEntrega"
+                type="time"
+                value={horaEntrega}
+                onChange={(e) => setHoraEntrega(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
