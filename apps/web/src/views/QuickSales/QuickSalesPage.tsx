@@ -108,7 +108,7 @@ export function QuickSalesPage() {
     const variant = product.variants?.find(v => v.id === selectedVariantId);
     if (!variant) return;
 
-    const qtd = parseInt(quantidade);
+    const qtd = parseFloat(quantidade);
     const newItem: ItemTemp = {
       productId: product.id,
       variantId: variant.id,
@@ -359,7 +359,7 @@ export function QuickSalesPage() {
                   <input
                     type="number"
                     min="1"
-                    step="1"
+                    step={products.find(p => p.id === selectedProductId)?.unit === 'KG' ? '0.001' : '1'}
                     value={quantidade}
                     onChange={(e) => setQuantidade(e.target.value)}
                     className="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"

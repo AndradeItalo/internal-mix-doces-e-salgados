@@ -262,13 +262,13 @@ export function OrderFormPage() {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label htmlFor="quantidade" className="block text-gray-700 mb-2">
-                  Quantidade
+                  Quantidade{products.find(p => p.id === selectedProdutoId)?.unit === 'KG' ? ' (kg)' : ''}
                 </label>
                 <input
                   id="quantidade"
                   type="number"
                   min="1"
-                  step="1"
+                  step={products.find(p => p.id === selectedProdutoId)?.unit === 'KG' ? '0.001' : '1'}
                   value={quantidade}
                   onChange={(e) => setQuantidade(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"

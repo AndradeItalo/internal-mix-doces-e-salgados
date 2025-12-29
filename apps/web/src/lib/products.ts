@@ -12,6 +12,7 @@ export type ProductVariant = {
 export type Product = {
   id: string;
   name: string;
+  unit: 'UN' | 'KG';
   price: number;
   stock: number;
   createdAt: string;
@@ -20,6 +21,7 @@ export type Product = {
 
 export type ProductUpsert = {
   name: string;
+  unit: 'UN' | 'KG';
   variants: Array<{
     id?: string;
     flavor: string;

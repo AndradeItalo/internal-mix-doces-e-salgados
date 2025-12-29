@@ -8,6 +8,7 @@ export function ProductFormPage() {
   const { id } = useParams<{ id: string }>();
 
   const [name, setName] = useState('');
+  const [unit, setUnit] = useState<'UN' | 'KG'>('UN');
 
   const [variants, setVariants] = useState<Array<{
     id?: string;
@@ -30,6 +31,7 @@ export function ProductFormPage() {
         setLoading(true);
         const p: Product = await productsApi.get(id);
         setName(p.name);
+        setUnit(p.unit || 'UN');
 
         if (Array.isArray(p.variants) && p.variants.length > 0) {
           setVariants(
@@ -95,7 +97,7 @@ export function ProductFormPage() {
         return;
       }
 
-      const payload: ProductUpsert = { name, variants: normalizedVariants };
+      const payload: ProductUpsert = { name, unit, variants: normalizedVariants };
       if (id) {
         await productsApi.update(id, payload);
       } else {
@@ -148,6 +150,22 @@ export function ProductFormPage() {
               placeholder="Ex: Brigadeiro Gourmet"
               required
             />
+          </div>
+
+          <div>
+            <label htmlFor="unit" className="block text-gray-700 mb-2">
+              Unidade de Venda *
+            </label>
+            <select
+              id="unit"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value as 'UN' | 'KG')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              required
+            >
+              <option value="UN">Unidade (UN)</option>
+              <option value="KG">Peso (KG)</option>
+            </select>
           </div>
 
           <div>

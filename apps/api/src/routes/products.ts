@@ -66,8 +66,9 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, price, stock, variants } = req.body as {
+    const { name, unit, price, stock, variants } = req.body as {
       name: string;
+      unit?: string;
       price?: number;
       stock?: number;
       variants?: VariantInput[];
@@ -105,6 +106,7 @@ router.post("/", async (req: Request, res: Response) => {
     const product = await prisma.product.create({
       data: {
         name,
+        ...(unit === "KG" || unit === "UN" ? { unit } : {}),
         variants: {
           create: normalizedVariants.map((v) => ({
             flavor: v.flavor,
@@ -125,8 +127,9 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const { name, price, stock, variants } = req.body as {
+    const { name, unit, price, stock, variants } = req.body as {
       name?: string;
+      unit?: string;
       price?: number;
       stock?: number;
       variants?: VariantInput[];
@@ -153,6 +156,7 @@ router.put("/:id", async (req: Request, res: Response) => {
         where: { id: productId },
         data: {
           ...(typeof name === "string" ? { name } : {}),
+          ...(unit === "KG" || unit === "UN" ? { unit } : {}),
         },
       });
 

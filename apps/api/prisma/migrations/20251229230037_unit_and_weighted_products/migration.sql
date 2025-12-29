@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "OrderItem" ALTER COLUMN "quantity" SET DATA TYPE DOUBLE PRECISION;
+
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "unit" TEXT NOT NULL DEFAULT 'UN';
+
+-- AlterTable
+ALTER TABLE "ProductVariant" ALTER COLUMN "stock" SET DATA TYPE DOUBLE PRECISION;
+
+-- AlterTable
+ALTER TABLE "QuickSaleItem" ALTER COLUMN "quantity" SET DATA TYPE DOUBLE PRECISION;
