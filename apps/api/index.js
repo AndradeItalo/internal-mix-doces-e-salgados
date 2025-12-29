@@ -1,2 +1,2 @@
-const { handler } = require("../dist/index.js");
+const { handler } = require("./dist/index.js");
 module.exports = handler;
