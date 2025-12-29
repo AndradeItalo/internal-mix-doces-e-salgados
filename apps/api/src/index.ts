@@ -47,7 +47,7 @@ app.get("/health", (req, res) => {
 
 // Log all registered routes
 console.log("[DEBUG] Registrando rotas...");
-app.use("/api/clients", clientsRouter);
+app.use("/clients", clientsRouter);
 console.log("[DEBUG] Rota /api/clients registrada");
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
