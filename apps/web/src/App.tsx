@@ -27,13 +27,17 @@ export default function App() {
   const handleLogin = (password: string) => {
     if (password === '123') {
       setIsAuthenticated(true);
-      window.localStorage.setItem('mixdoces:isAuthenticated', 'true');
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('mixdoces:isAuthenticated', 'true');
+      }
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    window.localStorage.removeItem('mixdoces:isAuthenticated');
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('mixdoces:isAuthenticated');
+    }
   };
 
   const PrivateLayout = () => {

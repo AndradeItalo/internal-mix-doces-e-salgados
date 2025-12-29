@@ -43,7 +43,7 @@ export function ClienteDetalhes({ clienteId, onBack, onNavigate }: ClienteDetalh
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => window.open(`https://wa.me/${cliente.telefone.replace(/\D/g, '')}`, '_blank')}
+              onClick={() => typeof window !== 'undefined' && window.open(`https://wa.me/${cliente.telefone.replace(/\D/g, '')}`, '_blank')}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
@@ -150,7 +150,7 @@ export function ClienteDetalhes({ clienteId, onBack, onNavigate }: ClienteDetalh
       {totalPendente > 0 && (
         <div className="mt-6">
           <button
-            onClick={() => window.open(`https://wa.me/${cliente.telefone.replace(/\D/g, '')}?text=Olá ${cliente.nome}, tudo bem? Gostaria de lembrar sobre o pagamento pendente de R$ ${totalPendente.toFixed(2)}. Obrigada!`, '_blank')}
+            onClick={() => typeof window !== 'undefined' && window.open(`https://wa.me/${cliente.telefone.replace(/\D/g, '')}?text=Olá ${cliente.nome}, tudo bem? Gostaria de lembrar sobre o pagamento pendente de R$ ${totalPendente.toFixed(2)}. Obrigada!`, '_blank')}
             className="w-full md:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
           >
             <MessageCircle className="w-5 h-5" />

@@ -66,7 +66,7 @@ export function ClientDetailsPage() {
           <div className="flex gap-3">
             {client.phone && (
               <button
-                onClick={() => window.open(`https://wa.me/${(client.phone ?? '').replace(/\D/g, '')}`, '_blank')}
+                onClick={() => typeof window !== 'undefined' && window.open(`https://wa.me/${(client.phone ?? '').replace(/\D/g, '')}`, '_blank')}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
