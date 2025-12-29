@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:4000/:path*",
+        destination: process.env.NODE_ENV === 'production' 
+          ? "https://internal-mix-doces-e-salgados.vercel.app/:path*"
+          : "http://localhost:4000/:path*",
       },
     ];
   },
