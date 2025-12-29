@@ -239,7 +239,10 @@ export function QuickSaleDetailsPage() {
                 <tbody>
                   {quickSale.items.map((item) => (
                     <tr key={item.id} className="border-b border-gray-100">
-                      <td className="py-2 text-gray-900">{item.product.name}</td>
+                      <td className="py-2 text-gray-900">
+                        {item.variant?.product?.name || item.product?.name || item.productId || item.variantId}
+                        {item.variant?.flavor ? ` - ${item.variant.flavor}` : ''}
+                      </td>
                       <td className="py-2 text-gray-600">{item.quantity}</td>
                       <td className="py-2 text-gray-600">R$ {item.price.toFixed(2)}</td>
                       <td className="py-2 text-gray-900">R$ {(item.quantity * item.price).toFixed(2)}</td>

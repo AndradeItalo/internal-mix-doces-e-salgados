@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface ItemTemp {
   productId: string;
+  variantId: string;
   product: string;
   quantity: number;
   price: number;
@@ -26,6 +27,7 @@ export function QuickSalesPage() {
   const [clienteId, setClienteId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState('');
   const [quantidade, setQuantidade] = useState('1');
 
   const getPaymentStatus = (quickSale: QuickSale) => {
@@ -85,7 +87,11 @@ export function QuickSalesPage() {
   }, []);
 
   const filtered = quickSales.filter(sale => {
-    const productName = sale.items?.map(item => item.product?.name).join(', ') || '';
+    const productName = sale.items?.map(item => {
+      const base = item.variant?.product?.name || item.product?.name || '';
+      const flavor = item.variant?.flavor ? ` - ${item.variant.flavor}` : '';
+      return `${base}${flavor}`.trim();
+    }).join(', ') || '';
     return productName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -94,22 +100,27 @@ export function QuickSalesPage() {
   const totalVendasHoje = vendasHoje.reduce((acc, v) => acc + v.total, 0);
 
   const handleAddItem = () => {
-    if (!selectedProductId || !quantidade) return;
+    if (!selectedProductId || !selectedVariantId || !quantidade) return;
 
     const product = products.find(p => p.id === selectedProductId);
     if (!product) return;
 
+    const variant = product.variants?.find(v => v.id === selectedVariantId);
+    if (!variant) return;
+
     const qtd = parseInt(quantidade);
     const newItem: ItemTemp = {
       productId: product.id,
-      product: product.name,
+      variantId: variant.id,
+      product: `${product.name} - ${variant.flavor}`,
       quantity: qtd,
-      price: product.price,
-      total: qtd * product.price,
+      price: variant.price,
+      total: qtd * variant.price,
     };
 
     setItems([...items, newItem]);
     setSelectedProductId('');
+    setSelectedVariantId('');
     setQuantidade('1');
   };
 
@@ -133,7 +144,7 @@ export function QuickSalesPage() {
         clientId: clienteId || undefined,
         total: valorTotalVenda,
         items: items.map(item => ({
-          productId: item.productId,
+          variantId: item.variantId,
           quantity: item.quantity,
           price: item.price
         }))
@@ -153,6 +164,7 @@ export function QuickSalesPage() {
       setItems([]);
       setClienteId('');
       setSelectedProductId('');
+      setSelectedVariantId('');
       setQuantidade('1');
     } catch (error) {
       console.error('Erro ao registrar venda:', error);
@@ -249,7 +261,10 @@ export function QuickSalesPage() {
                       <div className="space-y-1">
                         {sale.items?.map((item, index) => (
                           <div key={item.id} className="text-sm">
-                            <span className="text-gray-900">{item.product?.name || '—'}</span>
+                            <span className="text-gray-900">
+                              {(item.variant?.product?.name || item.product?.name || '—')}
+                              {item.variant?.flavor ? ` - ${item.variant.flavor}` : ''}
+                            </span>
                             <span className="text-gray-500 ml-2">x{item.quantity}</span>
                           </div>
                         )) || '—'}
@@ -325,6 +340,19 @@ export function QuickSalesPage() {
                     {products.map(product => (
                       <option key={product.id} value={product.id}>
                         {product.name} - R$ {product.price.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedVariantId}
+                    onChange={(e) => setSelectedVariantId(e.target.value)}
+                    className="w-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    disabled={!selectedProductId}
+                  >
+                    <option value="">Sabor</option>
+                    {(products.find(p => p.id === selectedProductId)?.variants || []).map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.flavor}
                       </option>
                     ))}
                   </select>

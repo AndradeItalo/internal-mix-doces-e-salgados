@@ -20,12 +20,22 @@ export type QuickSalePayment = {
 export type QuickSaleItem = {
   id: string;
   quickSaleId: string;
-  productId: string;
+  productId?: string;
+  variantId: string;
   quantity: number;
   price: number;
-  product: {
+  product?: {
     id: string;
     name: string;
+  };
+  variant?: {
+    id: string;
+    flavor: string;
+    productId: string;
+    product?: {
+      id: string;
+      name: string;
+    };
   };
 };
 

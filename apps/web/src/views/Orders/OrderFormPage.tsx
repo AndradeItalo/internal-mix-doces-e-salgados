@@ -8,6 +8,7 @@ import { paymentsApi } from '../../lib/payments';
 
 interface ItemTemp {
   produtoId: string;
+  variantId: string;
   produto: string;
   quantidade: number;
   valorUnitario: number;
@@ -31,6 +32,7 @@ export function OrderFormPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedProdutoId, setSelectedProdutoId] = useState('');
+  const [selectedVariantId, setSelectedVariantId] = useState('');
   const [quantidade, setQuantidade] = useState('1');
 
   useEffect(() => {
@@ -52,8 +54,9 @@ export function OrderFormPage() {
           // Carregar itens da encomenda
           if (order.items) {
             const mappedItems = order.items.map((item: OrderItem) => ({
-              produtoId: item.productId,
-              produto: item.product?.name || '',
+              produtoId: item.productId || item.variant?.productId || '',
+              variantId: item.variantId,
+              produto: `${item.variant?.product?.name || item.product?.name || ''}${item.variant?.flavor ? ` - ${item.variant.flavor}` : ''}`,
               quantidade: item.quantity,
               valorUnitario: item.price,
               valorTotal: item.quantity * item.price
@@ -71,22 +74,27 @@ export function OrderFormPage() {
   }, [id]);
 
   const handleAddItem = () => {
-    if (!selectedProdutoId || !quantidade) return;
+    if (!selectedProdutoId || !selectedVariantId || !quantidade) return;
 
     const produto = products.find(p => p.id === selectedProdutoId);
     if (!produto) return;
 
+    const variant = produto.variants?.find(v => v.id === selectedVariantId);
+    if (!variant) return;
+
     const qtd = parseFloat(quantidade);
     const newItem: ItemTemp = {
       produtoId: produto.id,
-      produto: produto.name,
+      variantId: variant.id,
+      produto: `${produto.name} - ${variant.flavor}`,
       quantidade: qtd,
-      valorUnitario: produto.price,
-      valorTotal: qtd * produto.price,
+      valorUnitario: variant.price,
+      valorTotal: qtd * variant.price,
     };
 
     setItems([...items, newItem]);
     setSelectedProdutoId('');
+    setSelectedVariantId('');
     setQuantidade('1');
   };
 
@@ -106,7 +114,7 @@ export function OrderFormPage() {
         deliveryAt: dataEntrega || undefined,
         deliveryHour: horaEntrega || undefined,
         status: 'pendente',
-        items: items.map(it => ({ productId: it.produtoId, quantity: it.quantidade, price: it.valorUnitario })),
+        items: items.map(it => ({ variantId: it.variantId, quantity: it.quantidade, price: it.valorUnitario })),
       };
       
       let order;
@@ -226,6 +234,26 @@ export function OrderFormPage() {
                 {products.map(produto => (
                   <option key={produto.id} value={produto.id}>
                     {produto.name} - R$ {produto.price.toFixed(2)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="sabor" className="block text-gray-700 mb-2">
+                Sabor
+              </label>
+              <select
+                id="sabor"
+                value={selectedVariantId}
+                onChange={(e) => setSelectedVariantId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                disabled={!selectedProdutoId}
+              >
+                <option value="">Selecione um sabor</option>
+                {(products.find(p => p.id === selectedProdutoId)?.variants || []).map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.flavor} - R$ {v.price.toFixed(2)} (Estoque: {v.stock})
                   </option>
                 ))}
               </select>

@@ -28,7 +28,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       include: {
         payments: true,
         client: { select: { id: true, name: true } },
-        items: { include: { product: true } },
+        items: { include: { product: true, variant: { include: { product: true } } } },
       },
     });
 
@@ -50,14 +50,48 @@ router.post("/", async (req: Request, res: Response) => {
       deliveryAt?: string;
       deliveryHour?: string;
       status: string;
-      items: Array<{ productId: string; quantity: number; price: number }>;
+      items: Array<{ productId?: string; variantId?: string; quantity: number; price: number }>;
     };
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Itens da encomenda são obrigatórios" });
     }
 
-    const total = items.reduce((acc, it) => acc + it.quantity * it.price, 0);
+    const normalizedItems = await Promise.all(items.map(async (it) => {
+      if (it.variantId) {
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: it.variantId },
+          include: { product: true },
+        });
+        if (!variant) throw new Error(`Variant não encontrada: ${it.variantId}`);
+
+        return {
+          productId: variant.productId,
+          variantId: variant.id,
+          quantity: it.quantity,
+          price: it.price,
+        };
+      }
+
+      if (it.productId) {
+        const defaultVariant = await prisma.productVariant.findFirst({
+          where: { productId: it.productId },
+          orderBy: { createdAt: "asc" },
+        });
+        if (!defaultVariant) throw new Error(`Produto não possui variantes: ${it.productId}`);
+
+        return {
+          productId: it.productId,
+          variantId: defaultVariant.id,
+          quantity: it.quantity,
+          price: it.price,
+        };
+      }
+
+      throw new Error("Item precisa de variantId ou productId");
+    }));
+
+    const total = normalizedItems.reduce((acc, it) => acc + it.quantity * it.price, 0);
 
     // Converter a data corretamente para evitar problemas de timezone
     const deliveryAtDate = parseDateSafe(deliveryAt);
@@ -69,8 +103,9 @@ router.post("/", async (req: Request, res: Response) => {
         deliveryHour: deliveryHour !== undefined ? deliveryHour : undefined,
         status,
         items: {
-          create: items.map((it) => ({
+          create: normalizedItems.map((it) => ({
             productId: it.productId,
+            variantId: it.variantId,
             quantity: it.quantity,
             price: it.price,
           })),

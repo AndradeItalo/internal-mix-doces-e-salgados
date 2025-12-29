@@ -4,12 +4,22 @@ import type { Payment } from './payments';
 export type OrderItem = {
   id: string;
   orderId: string;
-  productId: string;
+  productId?: string;
+  variantId: string;
   quantity: number;
   price: number;
-  product: {
+  product?: {
     id: string;
     name: string;
+  };
+  variant?: {
+    id: string;
+    flavor: string;
+    productId: string;
+    product?: {
+      id: string;
+      name: string;
+    };
   };
 };
 

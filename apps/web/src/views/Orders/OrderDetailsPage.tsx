@@ -238,7 +238,10 @@ export function OrderDetailsPage() {
               <tbody>
                 {order.items.map((it) => (
                   <tr key={it.id} className="border-b border-gray-100">
-                    <td className="px-4 py-3 text-gray-900">{it.product?.name || it.productId}</td>
+                    <td className="px-4 py-3 text-gray-900">
+                      {it.variant?.product?.name || it.product?.name || it.productId || it.variantId}
+                      {it.variant?.flavor ? ` - ${it.variant.flavor}` : ''}
+                    </td>
                     <td className="px-4 py-3 text-gray-600">{it.quantity}</td>
                     <td className="px-4 py-3 text-gray-600">R$ {it.price.toFixed(2)}</td>
                     <td className="px-4 py-3 text-gray-900">R$ {(it.quantity * it.price).toFixed(2)}</td>
