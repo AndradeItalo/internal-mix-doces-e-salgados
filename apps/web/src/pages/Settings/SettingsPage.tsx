@@ -1,3 +1,8 @@
+export function SettingsPage() {
+  return null;
+}
+
+/*
 import { useState } from 'react';
 import { Save, Upload, Download, Cake } from 'lucide-react';
 
@@ -257,3 +262,5 @@ export function SettingsPage() {
     </div>
   );
 }
+
+*/
