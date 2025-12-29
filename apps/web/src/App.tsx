@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 
-import { LoginPage } from './pages/Auth/LoginPage';
-import { ClientsListPage } from './pages/Clients/ClientsListPage';
-import { ClientFormPage } from './pages/Clients/ClientFormPage';
-import { ClientDetailsPage } from './pages/Clients/ClientDetailsPage';
-import { ProductsListPage } from './pages/Products/ProductsListPage';
-import { ProductFormPage } from './pages/Products/ProductFormPage';
-import { OrdersListPage } from './pages/Orders/OrdersListPage';
-import { OrdersAgendaPage } from './pages/Orders/OrdersAgendaPage';
-import { OrderFormPage } from './pages/Orders/OrderFormPage';
-import { OrderDetailsPage } from './pages/Orders/OrderDetailsPage';
-import { PaymentsPage } from './pages/Payments/PaymentsPage';
-import { HistoryPage } from './pages/History/HistoryPage';
+import { LoginPage } from './views/Auth/LoginPage';
+import { ClientsListPage } from './views/Clients/ClientsListPage';
+import { ClientFormPage } from './views/Clients/ClientFormPage';
+import { ClientDetailsPage } from './views/Clients/ClientDetailsPage';
+import { ProductsListPage } from './views/Products/ProductsListPage';
+import { ProductFormPage } from './views/Products/ProductFormPage';
+import { OrdersListPage } from './views/Orders/OrdersListPage';
+import { OrdersAgendaPage } from './views/Orders/OrdersAgendaPage';
+import { OrderFormPage } from './views/Orders/OrderFormPage';
+import { OrderDetailsPage } from './views/Orders/OrderDetailsPage';
+import { PaymentsPage } from './views/Payments/PaymentsPage';
+import { HistoryPage } from './views/History/HistoryPage';
 import { Sidebar } from './components/Sidebar';
 
 export default function App() {
@@ -24,8 +24,8 @@ export default function App() {
     return window.localStorage.getItem('mixdoces:isAuthenticated') === 'true';
   });
 
-  const handleLogin = (email: string, password: string) => {
-    if (email && password) {
+  const handleLogin = (password: string) => {
+    if (password === '123') {
       setIsAuthenticated(true);
       window.localStorage.setItem('mixdoces:isAuthenticated', 'true');
     }
@@ -93,6 +93,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route
+          path="/"
+          element={<Navigate to={isAuthenticated ? '/orders' : '/login'} replace />}
+        />
+
+        <Route
           path="/login"
           element={
             isAuthenticated ? (
@@ -104,8 +109,6 @@ export default function App() {
         />
 
         <Route element={<PrivateLayout />}>
-          <Route path="/" element={<Navigate to="/orders" replace />} />
-
           {/* Clients */}
           <Route path="/clients" element={<ClientsListPage />} />
           <Route path="/clients/new" element={<ClientFormPage />} />
