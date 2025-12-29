@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
@@ -14,20 +16,24 @@ import { OrderFormPage } from './pages/Orders/OrderFormPage';
 import { OrderDetailsPage } from './pages/Orders/OrderDetailsPage';
 import { PaymentsPage } from './pages/Payments/PaymentsPage';
 import { HistoryPage } from './pages/History/HistoryPage';
-import { SettingsPage } from './pages/Settings/SettingsPage';
 import { Sidebar } from './components/Sidebar';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('mixdoces:isAuthenticated') === 'true';
+  });
 
   const handleLogin = (email: string, password: string) => {
     if (email && password) {
       setIsAuthenticated(true);
+      window.localStorage.setItem('mixdoces:isAuthenticated', 'true');
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    window.localStorage.removeItem('mixdoces:isAuthenticated');
   };
 
   const PrivateLayout = () => {
@@ -123,9 +129,6 @@ export default function App() {
 
           {/* History */}
           <Route path="/history" element={<HistoryPage />} />
-
-          {/* Settings */}
-          <Route path="/settings" element={<SettingsPage />} />
 
           {/* End of protected routes */}
         </Route>

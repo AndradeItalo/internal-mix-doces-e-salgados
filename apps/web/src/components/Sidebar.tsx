@@ -5,7 +5,6 @@ import {
   CreditCard, 
   CalendarDays,
   Clock, 
-  Settings,
   LogOut,
   Cake
 } from 'lucide-react';
@@ -26,7 +25,6 @@ export function Sidebar({ onLogout }: SidebarProps) {
     { path: '/orders/agenda', label: 'Agenda', icon: CalendarDays },
     { path: '/payments', label: 'Pagamentos', icon: CreditCard },
     { path: '/history', label: 'Histórico', icon: Clock },
-    { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 
   return (
@@ -34,7 +32,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center">
-            <img src="images/logo-mix-doces.png" alt="Logo Mix Doces" />
+            <img src="/images/logo-mix-doces.png" alt="Logo Mix Doces" />
           </div>
           <div>
             <h2 className="text-gray-900">Mix Doces e Salgados</h2>

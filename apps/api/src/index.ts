@@ -14,10 +14,25 @@ import historyRouter from "./routes/history";
 
 const app = express();
 
-app.use(cors({
-  origin: "*"
-}));
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(express.json());
+
+const PORT = Number(process.env.PORT ?? 4000);
+const shouldListen = !process.env.VERCEL;
+
+if (shouldListen) {
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`API rodando na porta ${PORT}`);
+  });
+
+  server.on("error", (err) => {
+    console.error("Falha ao iniciar o servidor Express:", err);
+  });
+}
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
