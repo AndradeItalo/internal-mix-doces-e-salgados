@@ -5,12 +5,15 @@ const router = Router();
 
 router.get("/", async (req: Request, res: Response) => {
   try {
+    console.log("[GET /clients] Iniciando busca de clientes...");
     const clients = await prisma.client.findMany({
       orderBy: { createdAt: "desc" },
     });
+    console.log("[GET /clients] Clientes encontrados:", clients.length);
+    console.log("[GET /clients] Dados:", JSON.stringify(clients, null, 2));
     res.json(clients);
   } catch (error) {
-    console.error("Erro ao buscar clientes", error);
+    console.error("[GET /clients] Erro ao buscar clientes", error);
     res.status(500).json({ message: "Erro ao buscar clientes" });
   }
 });

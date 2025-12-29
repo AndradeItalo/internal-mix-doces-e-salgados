@@ -1,4 +1,6 @@
-const BASE_URL = "https://internal-mix-doces-e-salgados.vercel.app";
+const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? "https://internal-mix-doces-e-salgados.vercel.app"
+  : "http://localhost:4000";
 
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(BASE_URL + path, {
@@ -40,6 +42,6 @@ export async function apiPatch<T>(path: string, body: any): Promise<T> {
 }
 
 export async function apiDelete(path: string): Promise<void> {
-  const res = await fetch(path, { method: 'DELETE' });
+  const res = await fetch(BASE_URL + path, { method: "DELETE" });
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
 }

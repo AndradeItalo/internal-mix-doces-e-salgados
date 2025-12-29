@@ -14,6 +14,13 @@ import historyRouter from "./routes/history";
 
 const app = express();
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 app.use(
   cors({
     origin: "*",
@@ -38,15 +45,36 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/clients", clientsRouter);
-app.use("/products", productsRouter);
-app.use("/orders", ordersRouter);
-app.use("/quick-sales", quickSalesRouter);
-app.use("/quick-sale-payments", quickSalePaymentsRouter);
-app.use("/payments", paymentsRouter);
-app.use("/reminders", remindersRouter);
-app.use("/settings", settingsRouter);
-app.use("/history", historyRouter);
+// Log all registered routes
+console.log("[DEBUG] Registrando rotas...");
+app.use("/api/clients", clientsRouter);
+console.log("[DEBUG] Rota /api/clients registrada");
+app.use("/api/products", productsRouter);
+app.use("/api/orders", ordersRouter);
+app.use("/api/quick-sales", quickSalesRouter);
+app.use("/api/quick-sale-payments", quickSalePaymentsRouter);
+app.use("/api/payments", paymentsRouter);
+app.use("/api/reminders", remindersRouter);
+app.use("/api/settings", settingsRouter);
+app.use("/api/history", historyRouter);
+
+// 404 handler para debug
+app.use((req, res, next) => {
+  console.log(`[404] Rota não encontrada: ${req.method} ${req.path}`);
+  console.log("[404] Rotas disponíveis:", [
+    "/health",
+    "/api/clients",
+    "/api/products", 
+    "/api/orders",
+    "/api/quick-sales",
+    "/api/quick-sale-payments",
+    "/api/payments",
+    "/api/reminders",
+    "/api/settings",
+    "/api/history"
+  ]);
+  res.status(404).json({ error: "Rota não encontrada" });
+});
 
 // exporta para a Vercel
 export const handler = serverless(app);
