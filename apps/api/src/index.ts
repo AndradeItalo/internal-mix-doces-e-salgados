@@ -78,3 +78,5 @@ app.use((req, res, next) => {
 
 // exporta para a Vercel
 export const handler = serverless(app);
+
+export default app;
