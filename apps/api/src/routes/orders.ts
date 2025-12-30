@@ -136,27 +136,115 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const { clientId, total, deliveryAt, deliveryHour, notes, status } = req.body;
+    const { clientId, total, deliveryAt, deliveryHour, notes, status, items } = req.body as {
+      clientId?: string;
+      total?: number;
+      deliveryAt?: string;
+      deliveryHour?: string;
+      notes?: string;
+      status?: string;
+      items?: Array<{ productId?: string; variantId?: string; quantity: number; price: number }>;
+    };
     
     // Buscar encomenda atual para verificar mudanças
     const currentOrder = await prisma.order.findUnique({
       where: { id: req.params.id }
     });
+
+    if (!currentOrder) {
+      return res.status(404).json({ message: "Encomenda não encontrada" });
+    }
     
     // Converter a data corretamente para evitar problemas de timezone
     const deliveryAtDate = parseDateSafe(deliveryAt);
-    
-    const order = await prisma.order.update({
-      where: { id: req.params.id },
-      data: { clientId, total, deliveryAt: deliveryAtDate, deliveryHour, notes, status },
+
+    const updatedOrder = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      let computedTotal: number | undefined;
+      let normalizedItems:
+        | Array<{ productId: string; variantId: string; quantity: number; price: number }>
+        | undefined;
+
+      if (items && Array.isArray(items)) {
+        if (items.length === 0) {
+          throw new Error("Itens da encomenda são obrigatórios");
+        }
+
+        normalizedItems = await Promise.all(
+          items.map(async (it) => {
+            if (it.variantId) {
+              const variant = await tx.productVariant.findUnique({
+                where: { id: it.variantId },
+                include: { product: true },
+              });
+              if (!variant) throw new Error(`Variant não encontrada: ${it.variantId}`);
+
+              return {
+                productId: variant.productId,
+                variantId: variant.id,
+                quantity: it.quantity,
+                price: it.price,
+              };
+            }
+
+            if (it.productId) {
+              const defaultVariant = await tx.productVariant.findFirst({
+                where: { productId: it.productId },
+                orderBy: { createdAt: "asc" },
+              });
+              if (!defaultVariant) throw new Error(`Produto não possui variantes: ${it.productId}`);
+
+              return {
+                productId: it.productId,
+                variantId: defaultVariant.id,
+                quantity: it.quantity,
+                price: it.price,
+              };
+            }
+
+            throw new Error("Item precisa de variantId ou productId");
+          })
+        );
+
+        computedTotal = normalizedItems.reduce((acc, it) => acc + it.quantity * it.price, 0);
+      }
+
+      return tx.order.update({
+        where: { id: req.params.id },
+        data: {
+          clientId,
+          deliveryAt: deliveryAtDate,
+          deliveryHour,
+          notes,
+          status,
+          total: computedTotal !== undefined ? computedTotal : total,
+          ...(normalizedItems
+            ? {
+                items: {
+                  deleteMany: {},
+                  create: normalizedItems.map((it) => ({
+                    productId: it.productId,
+                    variantId: it.variantId,
+                    quantity: it.quantity,
+                    price: it.price,
+                  })),
+                },
+              }
+            : {}),
+        },
+      });
     });
     
     // Gerenciar lembretes baseado nas mudanças
     try {
-      if (status === 'entregue' && currentOrder?.status !== 'entregue') {
+      const effectiveStatus = status ?? currentOrder.status;
+
+      if (effectiveStatus === 'entregue' && currentOrder.status !== 'entregue') {
         // Se foi entregue, remover lembrete
         await ReminderService.removeReminderForOrder(req.params.id);
-      } else if (deliveryAtDate && (!currentOrder?.deliveryAt || deliveryAtDate.getTime() !== new Date(currentOrder.deliveryAt).getTime())) {
+      } else if (
+        deliveryAtDate &&
+        (!currentOrder.deliveryAt || deliveryAtDate.getTime() !== new Date(currentOrder.deliveryAt).getTime())
+      ) {
         // Se mudou a data de entrega, recriar lembrete
         await ReminderService.removeReminderForOrder(req.params.id);
         await ReminderService.createReminderForOrder(req.params.id);
@@ -166,7 +254,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       // Não falhar a atualização da encomenda
     }
     
-    res.json(order);
+    res.json(updatedOrder);
   } catch (error) {
     console.error("Erro ao atualizar encomenda", error);
     res.status(500).json({ message: "Erro ao atualizar encomenda" });
