@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ReminderService } from "../services/reminderService";
 import { parseDateSafe } from "../utils/dateUtils";
+import type { Prisma } from "@prisma/client";
 
 const router = Router();
 
@@ -45,10 +46,11 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { clientId, deliveryAt, deliveryHour, status, items } = req.body as {
+    const { clientId, deliveryAt, deliveryHour, notes, status, items } = req.body as {
       clientId: string;
       deliveryAt?: string;
       deliveryHour?: string;
+      notes?: string;
       status: string;
       items: Array<{ productId?: string; variantId?: string; quantity: number; price: number }>;
     };
@@ -99,8 +101,9 @@ router.post("/", async (req: Request, res: Response) => {
       data: {
         clientId,
         total,
-        deliveryAt: deliveryAt ? new Date(deliveryAt) : undefined,
+        deliveryAt: deliveryAtDate,
         deliveryHour: deliveryHour !== undefined ? deliveryHour : undefined,
+        notes: notes !== undefined ? notes : undefined,
         status,
         items: {
           create: normalizedItems.map((it) => ({
@@ -133,7 +136,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const { clientId, total, deliveryAt, deliveryHour, status } = req.body;
+    const { clientId, total, deliveryAt, deliveryHour, notes, status } = req.body;
     
     // Buscar encomenda atual para verificar mudanças
     const currentOrder = await prisma.order.findUnique({
@@ -145,7 +148,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     
     const order = await prisma.order.update({
       where: { id: req.params.id },
-      data: { clientId, total, deliveryAt: deliveryAtDate, deliveryHour, status },
+      data: { clientId, total, deliveryAt: deliveryAtDate, deliveryHour, notes, status },
     });
     
     // Gerenciar lembretes baseado nas mudanças
@@ -167,6 +170,34 @@ router.put("/:id", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Erro ao atualizar encomenda", error);
     res.status(500).json({ message: "Erro ao atualizar encomenda" });
+  }
+});
+
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+
+    const existing = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!existing) {
+      return res.status(404).json({ message: "Encomenda não encontrada" });
+    }
+
+    try {
+      await ReminderService.removeReminderForOrder(orderId);
+    } catch (reminderError) {
+      console.error("Erro ao remover lembretes da encomenda:", reminderError);
+    }
+
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.payment.deleteMany({ where: { orderId } });
+      await tx.orderItem.deleteMany({ where: { orderId } });
+      await tx.order.delete({ where: { id: orderId } });
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao excluir encomenda", error);
+    res.status(500).json({ message: "Erro ao excluir encomenda" });
   }
 });
 export default router;

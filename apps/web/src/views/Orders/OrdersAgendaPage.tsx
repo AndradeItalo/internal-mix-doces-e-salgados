@@ -61,6 +61,8 @@ export function OrdersAgendaPage() {
   };
 
   const sorted = useMemo(() => {
+    const onlyPending = orders.filter((o) => o.status === 'pendente');
+
     const toSortKey = (o: Order) => {
       if (!o.deliveryAt) return Number.POSITIVE_INFINITY;
 
@@ -72,7 +74,7 @@ export function OrdersAgendaPage() {
       return midnight + minutes * 60_000;
     };
 
-    return [...orders].sort((a, b) => toSortKey(a) - toSortKey(b));
+    return [...onlyPending].sort((a, b) => toSortKey(a) - toSortKey(b));
   }, [orders]);
 
   return (

@@ -29,6 +29,7 @@ export type Order = {
   total: number;
   deliveryAt?: string;
   deliveryHour?: string;
+  notes?: string;
   status: string;
   createdAt: string;
   payments?: Payment[];
@@ -36,10 +37,24 @@ export type Order = {
   items?: OrderItem[];
 };
 
+export type OrderCreateRequest = {
+  clientId: string;
+  deliveryAt?: string;
+  deliveryHour?: string;
+  notes?: string;
+  status: string;
+  items: Array<{ variantId: string; quantity: number; price: number }>;
+};
+
+export type OrderUpdateRequest = Partial<OrderCreateRequest> & {
+  clientId?: string;
+  total?: number;
+};
+
 export const ordersApi = {
   list: () => apiGet<Order[]>('/api/orders'),
   get: (id: string) => apiGet<Order>(`/api/orders/${id}`),
-  create: (data: Omit<Order, 'id' | 'createdAt'>) => apiPost<Order>('/api/orders', data),
-  update: (id: string, data: Partial<Order>) => apiPut<Order>(`/api/orders/${id}`, data),
+  create: (data: OrderCreateRequest) => apiPost<Order>('/api/orders', data),
+  update: (id: string, data: OrderUpdateRequest) => apiPut<Order>(`/api/orders/${id}`, data),
   remove: (id: string) => apiDelete(`/api/orders/${id}`),
 };

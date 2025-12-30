@@ -60,6 +60,7 @@ model Order {
   total      Float
   deliveryAt DateTime?
   deliveryHour String?
+  notes      String?
   status     String
   createdAt  DateTime  @default(now())
 

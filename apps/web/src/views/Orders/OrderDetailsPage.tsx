@@ -104,17 +104,9 @@ export function OrderDetailsPage() {
     if (!order) return;
     
     try {
-      // Atualizar o status para 'cancelado'
-      await ordersApi.update(order.id, { status: 'cancelado' });
-      
-      // Recarregar os dados da encomenda
-      const updatedOrder = await ordersApi.get(order.id);
-      setOrder(updatedOrder);
-      
-      // Mostrar feedback de sucesso
-      setSuccessMessage('Encomenda cancelada com sucesso!');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      await ordersApi.remove(order.id);
       setShowCancelModal(false);
+      navigate('/orders');
     } catch (e) {
       setError('Erro ao cancelar encomenda. Tente novamente.');
       setTimeout(() => setError(null), 3000);
@@ -218,6 +210,13 @@ export function OrderDetailsPage() {
           <p className="text-gray-900">{order.deliveryAt ? new Date(order.deliveryAt).toLocaleDateString('pt-BR') : '—'}</p>
         </div>
       </div>
+
+      {order.notes && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+          <h3 className="text-gray-900 mb-2">Anotações</h3>
+          <p className="text-gray-700 whitespace-pre-wrap">{order.notes}</p>
+        </div>
+      )}
 
       {/* Produtos da Encomenda */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">

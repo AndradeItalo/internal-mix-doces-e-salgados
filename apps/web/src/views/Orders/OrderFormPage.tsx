@@ -3,7 +3,7 @@ import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { clientsApi, type Client } from '../../lib/clients';
 import { productsApi, type Product } from '../../lib/products';
-import { ordersApi, type Order, type OrderItem } from '../../lib/orders';
+import { ordersApi, type OrderCreateRequest, type OrderItem } from '../../lib/orders';
 import { paymentsApi } from '../../lib/payments';
 
 interface ItemTemp {
@@ -23,6 +23,7 @@ export function OrderFormPage() {
   const [items, setItems] = useState<ItemTemp[]>([]);
   const [dataEntrega, setDataEntrega] = useState('');
   const [horaEntrega, setHoraEntrega] = useState('');
+  const [notes, setNotes] = useState('');
   const [valorPagamento, setValorPagamento] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Pix');
 
@@ -50,6 +51,7 @@ export function OrderFormPage() {
           setClienteId(order.clientId || '');
           setDataEntrega(order.deliveryAt ? new Date(order.deliveryAt).toISOString().split('T')[0] : '');
           setHoraEntrega(order.deliveryHour || '');
+          setNotes(order.notes || '');
           
           // Carregar itens da encomenda
           if (order.items) {
@@ -113,17 +115,18 @@ export function OrderFormPage() {
         clientId: clienteId,
         deliveryAt: dataEntrega || undefined,
         deliveryHour: horaEntrega || undefined,
+        notes: notes || undefined,
         status: 'pendente',
         items: items.map(it => ({ variantId: it.variantId, quantity: it.quantidade, price: it.valorUnitario })),
-      };
+      } satisfies OrderCreateRequest;
       
       let order;
       if (id) {
         // Modo edição
-        order = await ordersApi.update(id, payload as any);
+        order = await ordersApi.update(id, payload);
       } else {
         // Modo criação
-        order = await ordersApi.create(payload as any);
+        order = await ordersApi.create(payload);
         const amount = parseFloat((valorPagamento || '').replace(',', '.'));
         if (!isNaN(amount) && amount > 0) {
           await paymentsApi.create({ orderId: order.id, amount, method: formaPagamento, paidAt: new Date().toISOString() });
@@ -211,6 +214,20 @@ export function OrderFormPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
+          </div>
+
+          <div className="mt-6">
+            <label htmlFor="notes" className="block text-gray-700 mb-2">
+              Anotações
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="Ex: cliente quer com pouco recheio, sem nozes, etc"
+            />
           </div>
         </div>
 
