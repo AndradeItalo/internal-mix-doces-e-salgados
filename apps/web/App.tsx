@@ -2,26 +2,26 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 
-import { LoginPage } from './pages/Auth/LoginPage';
-import { ClientsListPage } from './pages/Clients/ClientsListPage';
-import { ClientFormPage } from './pages/Clients/ClientFormPage';
-import { ClientDetailsPage } from './pages/Clients/ClientDetailsPage';
-import { ProductsListPage } from './pages/Products/ProductsListPage';
-import { ProductFormPage } from './pages/Products/ProductFormPage';
-import { OrdersListPage } from './pages/Orders/OrdersListPage';
-import { OrdersAgendaPage } from './pages/Orders/OrdersAgendaPage';
-import { OrderFormPage } from './pages/Orders/OrderFormPage';
-import { OrderDetailsPage } from './pages/Orders/OrderDetailsPage';
-import { PaymentsPage } from './pages/Payments/PaymentsPage';
-import { HistoryPage } from './pages/History/HistoryPage';
-import { SettingsPage } from './pages/Settings/SettingsPage';
-import { Sidebar } from './components/Sidebar';
+import { LoginPage } from './src/views/Auth/LoginPage';
+import { ClientsListPage } from './src/views/Clients/ClientsListPage';
+import { ClientFormPage } from './src/views/Clients/ClientFormPage';
+import { ClientDetailsPage } from './src/views/Clients/ClientDetailsPage';
+import { ProductsListPage } from './src/views/Products/ProductsListPage';
+import { ProductFormPage } from './src/views/Products/ProductFormPage';
+import { OrdersListPage } from './src/views/Orders/OrdersListPage';
+import { OrdersAgendaPage } from './src/views/Orders/OrdersAgendaPage';
+import { OrderFormPage } from './src/views/Orders/OrderFormPage';
+import { OrderDetailsPage } from './src/views/Orders/OrderDetailsPage';
+import { PaymentsPage } from './src/views/Payments/PaymentsPage';
+import { HistoryPage } from './src/views/History/HistoryPage';
+import { SettingsPage } from './src/views/Settings/SettingsPage';
+import { Sidebar } from './src/components/Sidebar';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleLogin = (email: string, password: string) => {
-    if (email && password) {
+  const handleLogin = (password: string) => {
+    if (password) {
       setIsAuthenticated(true);
     }
   };
