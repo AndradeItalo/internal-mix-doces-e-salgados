@@ -222,7 +222,6 @@ router.get("/sales-by-month", async (req: Request, res: Response) => {
   }
 });
 
-// Produtos mais vendidos
 router.get("/top-products", async (req: Request, res: Response) => {
   try {
     const { month, productId } = req.query;
@@ -249,12 +248,12 @@ router.get("/top-products", async (req: Request, res: Response) => {
       order: { createdAt: dateFilter }
     };
     if (productId && productId !== 'todos') {
-      orderItemsWhere.productId = productId;
+      orderItemsWhere.variant = { productId };
     }
 
     const orderItems = await prisma.orderItem.findMany({
       where: orderItemsWhere,
-      include: { product: true }
+      include: { variant: { include: { product: true } }, product: true }
     });
 
     // Buscar itens de vendas rápidas
@@ -262,27 +261,32 @@ router.get("/top-products", async (req: Request, res: Response) => {
       quickSale: { createdAt: dateFilter }
     };
     if (productId && productId !== 'todos') {
-      quickSaleItemsWhere.productId = productId;
+      quickSaleItemsWhere.variant = { productId };
     }
 
     const quickSaleItems = await prisma.quickSaleItem.findMany({
       where: quickSaleItemsWhere,
-      include: { product: true }
+      include: { variant: { include: { product: true } }, product: true }
     });
 
-    // Agrupar vendas por produto
+    // Agrupar vendas por variante (produto + sabor)
     const productsMap: { [key: string]: { id: string; nome: string; quantidade: number; total: number } } = {};
     
     // Processar itens de encomendas
     orderItems.forEach((item: any) => {
-      const key = item.productId;
+      const key = item.variantId;
+
+      const productName = item.variant?.product?.name || item.product?.name || item.productId || 'Produto';
+      const flavor = item.variant?.flavor;
+      const displayName = flavor ? `${productName} - ${flavor}` : productName;
+
       if (productsMap[key]) {
         productsMap[key].quantidade += item.quantity;
         productsMap[key].total += item.quantity * item.price;
       } else {
         productsMap[key] = {
-          id: item.productId,
-          nome: item.product.name,
+          id: item.variantId,
+          nome: displayName,
           quantidade: item.quantity,
           total: item.quantity * item.price
         };
@@ -291,14 +295,19 @@ router.get("/top-products", async (req: Request, res: Response) => {
     
     // Processar itens de vendas rápidas
     quickSaleItems.forEach((item: any) => {
-      const key = item.productId;
+      const key = item.variantId;
+
+      const productName = item.variant?.product?.name || item.product?.name || item.productId || 'Produto';
+      const flavor = item.variant?.flavor;
+      const displayName = flavor ? `${productName} - ${flavor}` : productName;
+
       if (productsMap[key]) {
         productsMap[key].quantidade += item.quantity;
         productsMap[key].total += item.quantity * item.price;
       } else {
         productsMap[key] = {
-          id: item.productId,
-          nome: item.product.name,
+          id: item.variantId,
+          nome: displayName,
           quantidade: item.quantity,
           total: item.quantity * item.price
         };
