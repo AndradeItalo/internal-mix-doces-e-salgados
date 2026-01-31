@@ -64,4 +64,33 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+
+    const client = await prisma.client.findUnique({ where: { id } });
+    if (!client) {
+      return res.status(404).json({ message: "Cliente não encontrado" });
+    }
+
+    const [ordersCount, quickSalesCount] = await Promise.all([
+      prisma.order.count({ where: { clientId: id } }),
+      prisma.quickSale.count({ where: { clientId: id } }),
+    ]);
+
+    if (ordersCount > 0 || quickSalesCount > 0) {
+      return res.status(409).json({
+        message:
+          "Não é possível excluir este cliente porque ele possui vendas/encomendas vinculadas.",
+      });
+    }
+
+    await prisma.client.delete({ where: { id } });
+    return res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao excluir cliente", error);
+    return res.status(500).json({ message: "Erro ao excluir cliente" });
+  }
+});
+
 export default router;

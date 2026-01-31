@@ -1,4 +1,4 @@
-import { ArrowLeft, Edit, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Edit, MessageCircle, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { clientsApi, type Client } from '../../lib/clients';
@@ -10,6 +10,29 @@ export function ClientDetailsPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id || !client) return;
+
+    const confirmed = typeof window !== 'undefined' && window.confirm(
+      `Tem certeza que deseja excluir o cliente "${client.name}"?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await clientsApi.remove(id);
+      navigate('/clients');
+    } catch (e: any) {
+      const msg =
+        (e?.message && String(e.message)) ||
+        'Não foi possível excluir o cliente.';
+      setError(msg);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -79,6 +102,15 @@ export function ClientDetailsPage() {
             >
               <Edit className="w-5 h-5" />
               Editar
+            </button>
+
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-5 h-5" />
+              {deleting ? 'Excluindo...' : 'Excluir'}
             </button>
           </div>
         </div>
