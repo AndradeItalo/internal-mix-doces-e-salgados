@@ -4,32 +4,69 @@ import { parseDateSafe } from "../utils/dateUtils";
 
 const router = Router();
 
+function buildCreatedAtFilter(query: Request["query"]) {
+  const { month } = query;
+
+  if (query.day) {
+    const day = query.day as string;
+    const parsed = parseDateSafe(day);
+    if (!parsed) return null;
+
+    // Intervalo do dia em horário local (o Date guarda internamente em UTC)
+    const start = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+    const end = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 23, 59, 59, 999);
+    return { gte: start, lte: end };
+  }
+
+  if (month && month !== "todos") {
+    const year = new Date().getFullYear();
+    const monthMap: { [key: string]: number } = {
+      Janeiro: 0,
+      Fevereiro: 1,
+      Março: 2,
+      Abril: 3,
+      Maio: 4,
+      Junho: 5,
+      Julho: 6,
+      Agosto: 7,
+      Setembro: 8,
+      Outubro: 9,
+      Novembro: 10,
+      Dezembro: 11,
+    };
+    const monthNum = monthMap[month as string];
+    if (monthNum !== undefined) {
+      return {
+        gte: new Date(year, monthNum, 1),
+        lt: new Date(year, monthNum + 1, 1),
+      };
+    }
+  }
+
+  return null;
+}
+
 // Estatísticas gerais
 router.get("/stats", async (req: Request, res: Response) => {
   try {
     const { month, productId } = req.query;
     
     // Filtros de data
-    let dateFilter: any = {};
-    if (month && month !== 'todos') {
-      const year = new Date().getFullYear();
-      const monthMap: { [key: string]: number } = {
-        'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4,
-        'Junho': 5, 'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
-      };
-      const monthNum = monthMap[month as string];
-      if (monthNum !== undefined) {
-        dateFilter = {
-          gte: new Date(year, monthNum, 1),
-          lt: new Date(year, monthNum + 1, 1)
-        };
-      }
+    const dateFilter = buildCreatedAtFilter(req.query);
+    if (req.query.day && !dateFilter) {
+      return res.status(400).json({ message: "Parâmetro 'day' inválido. Use o formato YYYY-MM-DD." });
     }
-
+    if (dateFilter) {
+      console.log("[history/stats] dateFilter:", {
+        day: req.query.day,
+        start: (dateFilter as any).gte?.toISOString?.(),
+        end: (dateFilter as any).lte?.toISOString?.(),
+      });
+    }
+    
     // Buscar encomendas
-    const ordersWhere: any = {
-      createdAt: dateFilter
-    };
+    const ordersWhere: any = {};
+    if (dateFilter) ordersWhere.createdAt = dateFilter;
     if (productId && productId !== 'todos') {
       ordersWhere.items = {
         some: { productId }
@@ -46,9 +83,8 @@ router.get("/stats", async (req: Request, res: Response) => {
     });
 
     // Buscar vendas rápidas
-    const quickSalesWhere: any = {
-      createdAt: dateFilter
-    };
+    const quickSalesWhere: any = {};
+    if (dateFilter) quickSalesWhere.createdAt = dateFilter;
     if (productId && productId !== 'todos') {
       quickSalesWhere.items = {
         some: { productId }
@@ -227,25 +263,21 @@ router.get("/top-products", async (req: Request, res: Response) => {
     const { month, productId } = req.query;
     
     // Filtros de data
-    let dateFilter: any = {};
-    if (month && month !== 'todos') {
-      const year = new Date().getFullYear();
-      const monthMap: { [key: string]: number } = {
-        'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3, 'Maio': 4, 'Junho': 5,
-        'Julho': 6, 'Agosto': 7, 'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
-      };
-      const monthNum = monthMap[month as string];
-      if (monthNum !== undefined) {
-        dateFilter = {
-          gte: new Date(year, monthNum, 1),
-          lt: new Date(year, monthNum + 1, 1)
-        };
-      }
+    const dateFilter = buildCreatedAtFilter(req.query);
+    if (req.query.day && !dateFilter) {
+      return res.status(400).json({ message: "Parâmetro 'day' inválido. Use o formato YYYY-MM-DD." });
     }
-
+    if (dateFilter) {
+      console.log("[history/top-products] dateFilter:", {
+        day: req.query.day,
+        start: (dateFilter as any).gte?.toISOString?.(),
+        end: (dateFilter as any).lte?.toISOString?.(),
+      });
+    }
+    
     // Buscar itens de encomendas
     const orderItemsWhere: any = {
-      order: { createdAt: dateFilter }
+      ...(dateFilter ? { order: { createdAt: dateFilter } } : {})
     };
     if (productId && productId !== 'todos') {
       orderItemsWhere.variant = { productId };
@@ -258,7 +290,7 @@ router.get("/top-products", async (req: Request, res: Response) => {
 
     // Buscar itens de vendas rápidas
     const quickSaleItemsWhere: any = {
-      quickSale: { createdAt: dateFilter }
+      ...(dateFilter ? { quickSale: { createdAt: dateFilter } } : {})
     };
     if (productId && productId !== 'todos') {
       quickSaleItemsWhere.variant = { productId };

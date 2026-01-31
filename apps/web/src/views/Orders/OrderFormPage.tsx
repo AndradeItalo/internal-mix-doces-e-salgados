@@ -41,7 +41,10 @@ export function OrderFormPage() {
       try {
         setLoading(true);
         const [c, p] = await Promise.all([clientsApi.list(), productsApi.list()]);
-        setClients(c);
+        const sortedClients = [...c].sort((a, b) =>
+          (a.name || '').localeCompare((b.name || ''), 'pt-BR', { sensitivity: 'base' })
+        );
+        setClients(sortedClients);
         setProducts(p);
         setError(null);
 

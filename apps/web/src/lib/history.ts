@@ -22,9 +22,10 @@ export interface TopProduct {
 }
 
 export const historyApi = {
-  getStats: (filters?: { month?: string; productId?: string }) => {
+  getStats: (filters?: { month?: string; day?: string; productId?: string }) => {
     const params = new URLSearchParams();
     if (filters?.month && filters.month !== 'todos') params.append('month', filters.month);
+    if (filters?.day) params.append('day', filters.day);
     if (filters?.productId && filters.productId !== 'todos') params.append('productId', filters.productId);
     const query = params.toString();
     return apiGet<HistoryStats>(`/api/history/stats${query ? `?${query}` : ''}`);
@@ -37,9 +38,10 @@ export const historyApi = {
     return apiGet<SalesByMonth[]>(`/api/history/sales-by-month${query ? `?${query}` : ''}`);
   },
   
-  getTopProducts: (filters?: { month?: string; productId?: string }) => {
+  getTopProducts: (filters?: { month?: string; day?: string; productId?: string }) => {
     const params = new URLSearchParams();
     if (filters?.month && filters.month !== 'todos') params.append('month', filters.month);
+    if (filters?.day) params.append('day', filters.day);
     if (filters?.productId && filters.productId !== 'todos') params.append('productId', filters.productId);
     const query = params.toString();
     return apiGet<TopProduct[]>(`/api/history/top-products${query ? `?${query}` : ''}`);
